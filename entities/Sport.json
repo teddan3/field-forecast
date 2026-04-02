@@ -1,0 +1,36 @@
+{
+  "name": "Sport",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Sport Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "icon": {
+      "type": "string",
+      "title": "Icon URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "title": "Status"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "title": "Display Order"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

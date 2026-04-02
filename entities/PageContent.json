@@ -1,0 +1,39 @@
+{
+  "name": "PageContent",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Page Title"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "meta_title": {
+      "type": "string",
+      "title": "Meta Title"
+    },
+    "meta_description": {
+      "type": "string",
+      "title": "Meta Description"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content (HTML)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "title",
+    "slug"
+  ]
+}

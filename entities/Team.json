@@ -1,0 +1,34 @@
+{
+  "name": "Team",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Team Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "sport_id": {
+      "type": "string",
+      "title": "Sport ID"
+    },
+    "league_id": {
+      "type": "string",
+      "title": "League ID"
+    },
+    "logo": {
+      "type": "string",
+      "title": "Logo URL"
+    },
+    "short_name": {
+      "type": "string",
+      "title": "Short Name"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

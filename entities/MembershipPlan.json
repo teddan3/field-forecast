@@ -1,0 +1,70 @@
+{
+  "name": "MembershipPlan",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Plan Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "price": {
+      "type": "number",
+      "title": "Price"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "title": "Currency"
+    },
+    "duration_days": {
+      "type": "number",
+      "title": "Duration (Days)"
+    },
+    "features": {
+      "type": "string",
+      "title": "Features (comma-separated)"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "is_popular": {
+      "type": "boolean",
+      "default": false,
+      "title": "Popular Badge"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "title": "Status"
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "free",
+        "premium",
+        "vip"
+      ],
+      "default": "free",
+      "title": "Tier"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "title": "Display Order"
+    }
+  },
+  "required": [
+    "name",
+    "price",
+    "duration_days",
+    "tier"
+  ]
+}

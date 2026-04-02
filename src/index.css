@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --background: 220 14% 96%;
+    --foreground: 230 25% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 25% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 25% 9%;
+    --primary: 227 100% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 230 25% 9%;
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 160 100% 39%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 227 100% 59%;
+    --chart-1: 227 100% 59%;
+    --chart-2: 160 100% 39%;
+    --chart-3: 4 90% 58%;
+    --chart-4: 43 96% 56%;
+    --chart-5: 280 65% 60%;
+    --radius: 0.625rem;
+    --sidebar-background: 230 25% 9%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 227 100% 59%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 230 20% 14%;
+    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-border: 230 20% 18%;
+    --sidebar-ring: 227 100% 59%;
+
+    --gold: 40 60% 55%;
+    --gold-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 230 25% 7%;
+    --foreground: 220 14% 96%;
+    --card: 230 25% 10%;
+    --card-foreground: 220 14% 96%;
+    --popover: 230 25% 10%;
+    --popover-foreground: 220 14% 96%;
+    --primary: 227 100% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 230 20% 15%;
+    --secondary-foreground: 220 14% 96%;
+    --muted: 230 20% 15%;
+    --muted-foreground: 220 9% 60%;
+    --accent: 160 100% 39%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 230 20% 18%;
+    --input: 230 20% 18%;
+    --ring: 227 100% 59%;
+    --sidebar-background: 230 25% 5%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 227 100% 59%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 230 20% 12%;
+    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-border: 230 20% 14%;
+    --sidebar-ring: 227 100% 59%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    line-height: 1.1;
+  }
+}
+
+@layer utilities {
+  .font-body { font-family: var(--font-body); }
+  .font-heading { font-family: var(--font-heading); }
+  .font-mono { font-family: var(--font-mono); }
+  .text-gold { color: hsl(var(--gold)); }
+  .bg-gold { background-color: hsl(var(--gold)); }
+  .border-gold { border-color: hsl(var(--gold)); }
+  .ring-gold { --tw-ring-color: hsl(var(--gold)); }
+}
+
+/* Marquee animation for live ticker */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  display: flex;
+  width: max-content;
+}
+
+/* Pulse green for live indicator */
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.animate-pulse-green {
+  animation: pulse-green 1.5s ease-in-out infinite;
+}
+
+/* Tabular nums for odds */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

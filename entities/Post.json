@@ -1,0 +1,58 @@
+{
+  "name": "Post",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content"
+    },
+    "excerpt": {
+      "type": "string",
+      "title": "Excerpt"
+    },
+    "featured_image": {
+      "type": "string",
+      "title": "Featured Image URL"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "tags": {
+      "type": "string",
+      "title": "Tags (comma-separated)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "title": "Status"
+    },
+    "published_at": {
+      "type": "string",
+      "title": "Published At"
+    },
+    "author_name": {
+      "type": "string",
+      "title": "Author Name"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "content",
+    "status"
+  ]
+}

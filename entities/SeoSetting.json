@@ -1,0 +1,30 @@
+{
+  "name": "SeoSetting",
+  "type": "object",
+  "properties": {
+    "page_slug": {
+      "type": "string",
+      "title": "Page Slug"
+    },
+    "meta_title": {
+      "type": "string",
+      "title": "Meta Title"
+    },
+    "meta_description": {
+      "type": "string",
+      "title": "Meta Description"
+    },
+    "meta_keywords": {
+      "type": "string",
+      "title": "Meta Keywords"
+    },
+    "og_image": {
+      "type": "string",
+      "title": "OG Image URL"
+    }
+  },
+  "required": [
+    "page_slug",
+    "meta_title"
+  ]
+}

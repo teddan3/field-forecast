@@ -1,0 +1,85 @@
+{
+  "name": "Odd",
+  "type": "object",
+  "properties": {
+    "match_id": {
+      "type": "string",
+      "title": "Match ID"
+    },
+    "home_win": {
+      "type": "number",
+      "title": "Home Win"
+    },
+    "draw": {
+      "type": "number",
+      "title": "Draw"
+    },
+    "away_win": {
+      "type": "number",
+      "title": "Away Win"
+    },
+    "over_2_5": {
+      "type": "number",
+      "title": "Over 2.5"
+    },
+    "under_2_5": {
+      "type": "number",
+      "title": "Under 2.5"
+    },
+    "both_score_yes": {
+      "type": "number",
+      "title": "Both Score Yes"
+    },
+    "both_score_no": {
+      "type": "number",
+      "title": "Both Score No"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "very_high"
+      ],
+      "default": "medium",
+      "title": "Confidence"
+    },
+    "prediction": {
+      "type": "string",
+      "title": "Prediction Tip"
+    },
+    "analysis": {
+      "type": "string",
+      "title": "Analysis"
+    },
+    "is_premium": {
+      "type": "boolean",
+      "default": false,
+      "title": "Premium Only"
+    },
+    "is_vip": {
+      "type": "boolean",
+      "default": false,
+      "title": "VIP Only"
+    },
+    "workflow_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "review",
+        "published",
+        "archived"
+      ],
+      "default": "draft",
+      "title": "Workflow Status"
+    }
+  },
+  "required": [
+    "match_id",
+    "home_win",
+    "draw",
+    "away_win",
+    "workflow_status"
+  ]
+}

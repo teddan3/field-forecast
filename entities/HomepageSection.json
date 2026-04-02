@@ -1,0 +1,52 @@
+{
+  "name": "HomepageSection",
+  "type": "object",
+  "properties": {
+    "section_name": {
+      "type": "string",
+      "title": "Section Key"
+    },
+    "section_title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "section_subtitle": {
+      "type": "string",
+      "title": "Subtitle"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content"
+    },
+    "image": {
+      "type": "string",
+      "title": "Image URL"
+    },
+    "cta_text": {
+      "type": "string",
+      "title": "CTA Text"
+    },
+    "cta_link": {
+      "type": "string",
+      "title": "CTA Link"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "title": "Status"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "title": "Display Order"
+    }
+  },
+  "required": [
+    "section_name",
+    "section_title"
+  ]
+}

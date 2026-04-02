@@ -1,0 +1,40 @@
+{
+  "name": "League",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "League Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "Slug"
+    },
+    "sport_id": {
+      "type": "string",
+      "title": "Sport ID"
+    },
+    "logo": {
+      "type": "string",
+      "title": "Logo URL"
+    },
+    "country": {
+      "type": "string",
+      "title": "Country"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "name",
+    "slug",
+    "sport_id"
+  ]
+}
