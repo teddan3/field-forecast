@@ -55,7 +55,7 @@ export default function Home() {
               </span>
             </div>
             <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
-              {heroSection?.section_title || 'Data-Driven Odds Intelligence'}
+              {heroSection?.section_title || 'Premium Odds Prediction Platform'}
             </h1>
             <p className="text-lg sm:text-xl text-background/70 leading-relaxed mb-8 max-w-2xl">
               {heroSection?.section_subtitle || 'Access professional-grade sports analysis and odds intelligence. Trusted by analysts who demand precision.'}
