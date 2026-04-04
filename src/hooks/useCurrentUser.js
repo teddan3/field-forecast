@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import localDb from '@/lib/localDb';
 
 export default function useCurrentUser() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const me = await base44.auth.me();
-      setUser(me);
+    const checkUser = () => {
+      const currentUser = localDb.users.getCurrentUser();
+      setUser(currentUser);
       setLoading(false);
     };
-    fetchUser();
+    checkUser();
+    
+    window.addEventListener('storage', checkUser);
+    const interval = setInterval(checkUser, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', checkUser);
+      clearInterval(interval);
+    };
   }, []);
 
   const isPremium = user?.membership_type === 'premium' || user?.membership_type === 'vip';
@@ -22,12 +30,31 @@ export default function useCurrentUser() {
   const canManageSeo = user?.role === 'admin' || user?.role === 'seo_manager';
   const canManageContent = user?.role === 'admin' || user?.role === 'editor';
 
-  const membershipActive = user?.membership_status === 'active' && 
-    (!user?.membership_expiry_date || new Date(user.membership_expiry_date) > new Date());
+  const membershipActive = user?.membership_status === 'active';
+
+  const logout = () => {
+    localDb.users.logout();
+    setUser(null);
+    window.location.reload();
+  };
+
+  const refresh = () => {
+    const currentUser = localDb.users.getCurrentUser();
+    setUser(currentUser);
+  };
 
   return { 
-    user, loading, isPremium: isPremium && membershipActive, isVip: isVip && membershipActive, 
-    isAdmin, isSuperAdmin, canManageOdds, canManageSeo, canManageContent, membershipActive,
-    refresh: async () => { const me = await base44.auth.me(); setUser(me); }
+    user, 
+    loading, 
+    isPremium: isPremium && membershipActive, 
+    isVip: isVip && membershipActive, 
+    isAdmin, 
+    isSuperAdmin, 
+    canManageOdds, 
+    canManageSeo, 
+    canManageContent, 
+    membershipActive: membershipActive,
+    logout,
+    refresh,
   };
 }

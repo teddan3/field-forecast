@@ -1,7 +1,20 @@
 import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
+import localDb from '@/lib/localDb';
+import { useEffect, useState } from 'react';
 
 export default function Footer() {
+  const [cmsPages, setCmsPages] = useState([]);
+
+  useEffect(() => {
+    const pages = localDb.pages.getAll().filter(p => p.status === 'active');
+    setCmsPages(pages);
+  }, []);
+
+  const aboutPage = cmsPages.find(p => p.slug === 'about');
+  const termsPage = cmsPages.find(p => p.slug === 'terms');
+  const privacyPage = cmsPages.find(p => p.slug === 'privacy');
+
   return (
     <footer className="border-t border-border bg-card mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -30,14 +43,26 @@ export default function Footer() {
             <div className="space-y-2.5">
               <Link to="/pricing" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
               <Link to="/blog" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Blog & News</Link>
-              <Link to="/contact" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
+              {aboutPage ? (
+                <Link to={`/page/${aboutPage.slug}`} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</Link>
+              ) : (
+                <Link to="/contact" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
+              )}
             </div>
           </div>
           <div>
             <h4 className="font-heading text-sm font-semibold mb-4">Legal</h4>
             <div className="space-y-2.5">
-              <span className="block text-sm text-muted-foreground">Terms of Service</span>
-              <span className="block text-sm text-muted-foreground">Privacy Policy</span>
+              {termsPage ? (
+                <Link to={`/page/${termsPage.slug}`} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
+              ) : (
+                <span className="block text-sm text-muted-foreground">Terms of Service</span>
+              )}
+              {privacyPage ? (
+                <Link to={`/page/${privacyPage.slug}`} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
+              ) : (
+                <span className="block text-sm text-muted-foreground">Privacy Policy</span>
+              )}
               <span className="block text-sm text-muted-foreground">Responsible Gaming</span>
             </div>
           </div>

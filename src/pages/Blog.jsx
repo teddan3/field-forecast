@@ -1,23 +1,32 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import moment from 'moment';
+import localDb from '@/lib/localDb';
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [pageHeader, setPageHeader] = useState(null);
 
   useEffect(() => {
-    base44.entities.Post.filter({ status: 'published' }, '-published_at', 50).then(p => {
-      setPosts(p); setLoading(false);
-    });
+    const header = localDb.sections.getByName('blog', 'page_header');
+    setPageHeader(header);
+    
+    const demoPosts = [
+      { id: 'bp1', title: 'Premier League Weekend Preview', slug: 'premier-league-preview', excerpt: 'Our analysts break down the key matches and betting opportunities for this weekend.', category: 'Analysis', featured_image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800', author_name: 'Field Forecast Team', published_at: new Date().toISOString() },
+      { id: 'bp2', title: 'NBA Playoff Betting Strategies', slug: 'nba-playoff-strategies', excerpt: 'Learn proven strategies for betting on NBA playoff games with our expert guide.', category: 'Tips', featured_image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800', author_name: 'Field Forecast Team', published_at: new Date().toISOString() },
+      { id: 'bp3', title: 'Understanding Odds Movement', slug: 'odds-movement-guide', excerpt: 'How to read and profit from line movements in sports betting markets.', category: 'Education', featured_image: 'https://images.unsplash.com/photo-1460939381446-888ae0ae32ca?w=800', author_name: 'Field Forecast Team', published_at: new Date().toISOString() },
+    ];
+    setPosts(demoPosts);
+    setLoading(false);
   }, []);
 
+  const title = pageHeader?.title || 'Analysis & Insights';
+  const subtitle = pageHeader?.subtitle || 'Expert analysis, betting tips, and sports news.';
   const categories = ['all', ...new Set(posts.map(p => p.category).filter(Boolean))];
   const filtered = posts.filter(p => {
     if (category !== 'all' && p.category !== category) return false;
@@ -25,11 +34,16 @@ export default function Blog() {
     return true;
   });
 
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
-        <h1 className="font-heading text-4xl font-bold mb-2">Blog & Analysis</h1>
-        <p className="text-muted-foreground">Expert insights, match previews, and sports analysis.</p>
+        <h1 className="font-heading text-4xl font-bold mb-2">{title}</h1>
+        <p className="text-muted-foreground">{subtitle}</p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
@@ -73,7 +87,7 @@ export default function Blog() {
                 {p.excerpt && <p className="text-sm text-muted-foreground line-clamp-3 flex-1 mb-4">{p.excerpt}</p>}
                 <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto">
                   {p.author_name && <span className="flex items-center gap-1"><User className="w-3 h-3" />{p.author_name}</span>}
-                  {p.published_at && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{moment(p.published_at).format('MMM D, YYYY')}</span>}
+                  {p.published_at && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(p.published_at)}</span>}
                 </div>
               </div>
             </Link>

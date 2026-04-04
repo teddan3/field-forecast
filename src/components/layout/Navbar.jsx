@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Menu, X, Crown, Shield, ChevronDown, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { base44 } from '@/api/base44Client';
+import localDb from '@/lib/localDb';
 import useCurrentUser from '../../hooks/useCurrentUser';
 
 const navLinks = [
@@ -19,7 +19,12 @@ const navLinks = [
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
-  const { user, isPremium, isVip, isAdmin } = useCurrentUser();
+  const { user, isPremium, isVip, isAdmin, logout } = useCurrentUser();
+
+  const handleLogout = () => {
+    localDb.users.logout();
+    window.location.href = '/';
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
@@ -30,7 +35,7 @@ export default function Navbar() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Shield className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold tracking-tight">Alpha</span>
+            <span className="font-heading text-lg font-bold tracking-tight">Field Forecast</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -95,7 +100,7 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => base44.auth.logout()} className="cursor-pointer text-destructive">
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                   <LogOut className="w-4 h-4 mr-2" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -1,0 +1,54 @@
+{
+  "name": "Media",
+  "type": "object",
+  "properties": {
+    "filename": {
+      "type": "string",
+      "title": "Filename"
+    },
+    "file_url": {
+      "type": "string",
+      "title": "File URL"
+    },
+    "file_type": {
+      "type": "string",
+      "enum": ["image", "video", "document", "other"],
+      "default": "image",
+      "title": "File Type"
+    },
+    "mime_type": {
+      "type": "string",
+      "title": "MIME Type"
+    },
+    "file_size": {
+      "type": "number",
+      "title": "File Size (bytes)"
+    },
+    "alt_text": {
+      "type": "string",
+      "title": "Alt Text"
+    },
+    "caption": {
+      "type": "string",
+      "title": "Caption"
+    },
+    "folder": {
+      "type": "string",
+      "title": "Folder"
+    },
+    "tags": {
+      "type": "string",
+      "title": "Tags (comma-separated)"
+    },
+    "uploaded_by": {
+      "type": "string",
+      "title": "Uploaded By (User ID)"
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0,
+      "title": "Usage Count"
+    }
+  },
+  "required": ["filename", "file_url", "file_type"]
+}

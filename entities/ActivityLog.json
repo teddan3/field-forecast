@@ -1,0 +1,58 @@
+{
+  "name": "ActivityLog",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "title": "User ID"
+    },
+    "user_name": {
+      "type": "string",
+      "title": "User Name"
+    },
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["create", "update", "delete", "login", "logout", "payment", "upload", "view", "export", "import", "publish", "unpublish"],
+      "title": "Action"
+    },
+    "entity_type": {
+      "type": "string",
+      "title": "Entity Type"
+    },
+    "entity_id": {
+      "type": "string",
+      "title": "Entity ID"
+    },
+    "entity_name": {
+      "type": "string",
+      "title": "Entity Name"
+    },
+    "changes": {
+      "type": "string",
+      "title": "Changes (JSON)"
+    },
+    "ip_address": {
+      "type": "string",
+      "title": "IP Address"
+    },
+    "user_agent": {
+      "type": "string",
+      "title": "User Agent"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["success", "failed"],
+      "default": "success",
+      "title": "Status"
+    }
+  },
+  "required": ["user_id", "action", "entity_type"]
+}

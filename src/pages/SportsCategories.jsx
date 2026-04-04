@@ -1,36 +1,72 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Trophy } from 'lucide-react';
+import localDb from '@/lib/localDb';
 
 export default function SportsCategories() {
   const [sports, setSports] = useState([]);
-  const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageHeader, setPageHeader] = useState(null);
+  const [sportsGrid, setSportsGrid] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
-      const [s, l] = await Promise.all([
-        base44.entities.Sport.filter({ status: 'active' }, 'display_order', 50),
-        base44.entities.League.filter({ status: 'active' }, 'name', 100),
-      ]);
-      setSports(s); setLeagues(l);
-      setLoading(false);
-    };
-    load();
+    const header = localDb.sections.getByName('sports', 'page_header');
+    const grid = localDb.sections.getByName('sports', 'sports_grid');
+    setPageHeader(header);
+    setSportsGrid(grid);
+    
+    if (grid?.grid_items) {
+      setSports(JSON.parse(grid.grid_items).map((item, i) => ({
+        id: `sp${i+1}`,
+        name: item.name,
+        icon: item.icon,
+        color: item.color,
+        count: item.count,
+        leagues: [
+          { id: `l${i*10+1}`, name: 'Major League' },
+          { id: `l${i*10+2}`, name: 'Regional League' },
+        ]
+      })));
+    } else {
+      const demoSports = [
+        { id: 'sp1', name: 'Football', icon: null, leagues: [
+          { id: 'l1', name: 'Premier League' },
+          { id: 'l2', name: 'La Liga' },
+          { id: 'l3', name: 'Bundesliga' },
+          { id: 'l4', name: 'Serie A' },
+          { id: 'l5', name: 'Ligue 1' },
+        ]},
+        { id: 'sp2', name: 'Basketball', icon: null, leagues: [
+          { id: 'l6', name: 'NBA' },
+          { id: 'l7', name: 'EuroLeague' },
+        ]},
+        { id: 'sp3', name: 'Tennis', icon: null, leagues: [
+          { id: 'l8', name: 'ATP Tour' },
+          { id: 'l9', name: 'WTA Tour' },
+        ]},
+        { id: 'sp4', name: 'Baseball', icon: null, leagues: [
+          { id: 'l10', name: 'MLB' },
+        ]},
+        { id: 'sp5', name: 'Hockey', icon: null, leagues: [
+          { id: 'l11', name: 'NHL' },
+        ]},
+        { id: 'sp6', name: 'American Football', icon: null, leagues: [
+          { id: 'l12', name: 'NFL' },
+        ]},
+      ];
+      setSports(demoSports);
+    }
+    setLoading(false);
   }, []);
 
-  const leaguesBySport = {};
-  leagues.forEach(l => {
-    if (!leaguesBySport[l.sport_id]) leaguesBySport[l.sport_id] = [];
-    leaguesBySport[l.sport_id].push(l);
-  });
+  const title = pageHeader?.title || 'Sports Categories';
+  const subtitle = pageHeader?.subtitle || 'Browse odds by sport and league';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="mb-8">
-        <h1 className="font-heading text-3xl sm:text-4xl font-bold mb-2">Sports Categories</h1>
-        <p className="text-muted-foreground">Browse odds by sport and league</p>
+        <h1 className="font-heading text-3xl sm:text-4xl font-bold mb-2">{title}</h1>
+        <p className="text-muted-foreground">{subtitle}</p>
       </div>
 
       {loading ? (
@@ -42,27 +78,22 @@ export default function SportsCategories() {
           {sports.map(sport => (
             <div key={sport.id} className="bg-card rounded-xl border border-border p-6 hover:border-primary/20 transition-colors">
               <div className="flex items-center gap-3 mb-4">
-                {sport.icon ? (
-                  <img src={sport.icon} alt={sport.name} className="w-10 h-10 rounded-lg object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
-                    <Trophy className="w-5 h-5 text-primary" />
-                  </div>
-                )}
+                <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-primary" />
+                </div>
                 <div>
                   <h2 className="font-heading text-lg font-semibold">{sport.name}</h2>
-                  <span className="text-xs text-muted-foreground">{(leaguesBySport[sport.id] || []).length} leagues</span>
+                  <span className="text-xs text-muted-foreground">{sport.leagues?.length || 0} leagues</span>
                 </div>
               </div>
               <div className="space-y-1.5">
-                {(leaguesBySport[sport.id] || []).slice(0, 5).map(league => (
+                {(sport.leagues || []).slice(0, 5).map(league => (
                   <Link
                     key={league.id}
                     to={`/free-odds?league=${league.id}`}
                     className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm group"
                   >
                     <span className="flex items-center gap-2">
-                      {league.logo && <img src={league.logo} alt={league.name} className="w-4 h-4 rounded" />}
                       {league.name}
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />

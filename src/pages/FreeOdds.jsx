@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Search, Filter, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MatchOddsRow from '../components/odds/MatchOddsRow';
 import useCurrentUser from '../hooks/useCurrentUser';
-import moment from 'moment';
+import localDb from '@/lib/localDb';
 
 const tabs = [
   { key: 'today', label: 'Today' },
@@ -14,6 +13,12 @@ const tabs = [
   { key: 'weekend', label: 'Weekend' },
   { key: 'all', label: 'All' },
 ];
+
+function getDateStr(days = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString();
+}
 
 export default function FreeOdds() {
   const [matches, setMatches] = useState([]);
@@ -26,31 +31,55 @@ export default function FreeOdds() {
   const [sportFilter, setSportFilter] = useState('all');
   const [leagueFilter, setLeagueFilter] = useState('all');
   const { isPremium, isVip } = useCurrentUser();
+  const [pageHeader, setPageHeader] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
-      const [m, o, sp, lg] = await Promise.all([
-        base44.entities.Match.list('-match_datetime', 100),
-        base44.entities.Odd.filter({ workflow_status: 'published', is_premium: false }, '-created_date', 100),
-        base44.entities.Sport.filter({ status: 'active' }),
-        base44.entities.League.filter({ status: 'active' }),
-      ]);
-      setMatches(m); setOdds(o); setSports(sp); setLeagues(lg);
-      setLoading(false);
-    };
-    load();
+    const header = localDb.sections.getByName('free-odds', 'page_header');
+    setPageHeader(header);
+
+    const demoSports = [
+      { id: 's1', name: 'Football' },
+      { id: 's2', name: 'Basketball' },
+      { id: 's3', name: 'Tennis' },
+    ];
+    const demoLeagues = [
+      { id: 'l1', name: 'Premier League' },
+      { id: 'l2', name: 'La Liga' },
+      { id: 'l3', name: 'Bundesliga' },
+    ];
+    const demoMatches = [
+      { id: 'm1', home_team_name: 'Manchester United', away_team_name: 'Liverpool', league_name: 'Premier League', sport_id: 's1', league_id: 'l1', match_datetime: getDateStr(), status: 'upcoming' },
+      { id: 'm2', home_team_name: 'Real Madrid', away_team_name: 'Barcelona', league_name: 'La Liga', sport_id: 's1', league_id: 'l2', match_datetime: getDateStr(), status: 'upcoming' },
+      { id: 'm3', home_team_name: 'Bayern Munich', away_team_name: 'Dortmund', league_name: 'Bundesliga', sport_id: 's1', league_id: 'l3', match_datetime: getDateStr(1), status: 'upcoming' },
+      { id: 'm4', home_team_name: 'PSG', away_team_name: 'Marseille', league_name: 'Ligue 1', sport_id: 's1', league_id: 'l1', match_datetime: getDateStr(), status: 'upcoming' },
+      { id: 'm5', home_team_name: 'Juventus', away_team_name: 'AC Milan', league_name: 'Serie A', sport_id: 's1', league_id: 'l1', match_datetime: getDateStr(2), status: 'upcoming' },
+    ];
+    const demoOdds = [
+      { match_id: 'm1', home_odds: 2.1, draw_odds: 3.4, away_odds: 3.5, prediction: 'home', confidence: 78 },
+      { match_id: 'm2', home_odds: 1.9, draw_odds: 3.6, away_odds: 4.2, prediction: 'home', confidence: 82 },
+      { match_id: 'm3', home_odds: 1.7, draw_odds: 4.0, away_odds: 4.5, prediction: 'home', confidence: 85 },
+      { match_id: 'm4', home_odds: 1.8, draw_odds: 3.5, away_odds: 4.8, prediction: 'home', confidence: 75 },
+      { match_id: 'm5', home_odds: 2.2, draw_odds: 3.2, away_odds: 3.3, prediction: 'away', confidence: 70 },
+    ];
+
+    setMatches(demoMatches);
+    setOdds(demoOdds);
+    setSports(demoSports);
+    setLeagues(demoLeagues);
+    setLoading(false);
   }, []);
 
+  const title = pageHeader?.title || 'Free Odds';
+  const subtitle = pageHeader?.subtitle || "Today's best free predictions and odds analysis.";
   const oddsMap = Object.fromEntries(odds.map(o => [o.match_id, o]));
 
   const filtered = useMemo(() => {
     let result = matches;
-    if (tab === 'today') result = result.filter(m => moment(m.match_datetime).isSame(moment(), 'day'));
-    else if (tab === 'tomorrow') result = result.filter(m => moment(m.match_datetime).isSame(moment().add(1, 'day'), 'day'));
-    else if (tab === 'weekend') {
-      const sat = moment().day(6); const sun = moment().day(7);
-      result = result.filter(m => moment(m.match_datetime).isBetween(sat.startOf('day'), sun.endOf('day'), null, '[]'));
-    }
+    if (tab === 'today') result = result.filter(m => new Date(m.match_datetime).toDateString() === new Date().toDateString());
+    else if (tab === 'tomorrow') result = result.filter(m => {
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      return new Date(m.match_datetime).toDateString() === tomorrow.toDateString();
+    });
     if (sportFilter !== 'all') result = result.filter(m => m.sport_id === sportFilter);
     if (leagueFilter !== 'all') result = result.filter(m => m.league_id === leagueFilter);
     if (search) result = result.filter(m => `${m.home_team_name} ${m.away_team_name} ${m.league_name}`.toLowerCase().includes(search.toLowerCase()));
@@ -60,8 +89,8 @@ export default function FreeOdds() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
-        <h1 className="font-heading text-4xl font-bold mb-2">Free Odds</h1>
-        <p className="text-muted-foreground">Today's best free predictions and odds analysis.</p>
+        <h1 className="font-heading text-4xl font-bold mb-2">{title}</h1>
+        <p className="text-muted-foreground">{subtitle}</p>
       </div>
 
       {/* Filters */}

@@ -1,0 +1,82 @@
+{
+  "name": "PaymentTransaction",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "title": "User ID"
+    },
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "user_name": {
+      "type": "string",
+      "title": "User Name"
+    },
+    "plan_id": {
+      "type": "string",
+      "title": "Plan ID"
+    },
+    "plan_name": {
+      "type": "string",
+      "title": "Plan Name"
+    },
+    "amount": {
+      "type": "number",
+      "title": "Amount"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "title": "Currency"
+    },
+    "paystack_reference": {
+      "type": "string",
+      "title": "Paystack Reference"
+    },
+    "paystack_transaction_id": {
+      "type": "string",
+      "title": "Paystack Transaction ID"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "success", "failed", "refunded", "cancelled"],
+      "default": "pending",
+      "title": "Status"
+    },
+    "payment_method": {
+      "type": "string",
+      "title": "Payment Method"
+    },
+    "channel": {
+      "type": "string",
+      "title": "Channel (card, bank, etc)"
+    },
+    "ip_address": {
+      "type": "string",
+      "title": "IP Address"
+    },
+    "metadata": {
+      "type": "string",
+      "title": "Metadata (JSON)"
+    },
+    "failure_reason": {
+      "type": "string",
+      "title": "Failure Reason"
+    },
+    "refund_amount": {
+      "type": "number",
+      "title": "Refund Amount"
+    },
+    "refund_reason": {
+      "type": "string",
+      "title": "Refund Reason"
+    },
+    "refunded_at": {
+      "type": "string",
+      "title": "Refunded At"
+    }
+  },
+  "required": ["user_id", "amount", "status"]
+}

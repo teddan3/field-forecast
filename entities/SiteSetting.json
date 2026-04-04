@@ -1,0 +1,36 @@
+{
+  "name": "SiteSetting",
+  "type": "object",
+  "properties": {
+    "setting_key": {
+      "type": "string",
+      "title": "Setting Key"
+    },
+    "setting_value": {
+      "type": "string",
+      "title": "Setting Value"
+    },
+    "setting_type": {
+      "type": "string",
+      "enum": ["text", "number", "boolean", "json", "file"],
+      "default": "text",
+      "title": "Setting Type"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["general", "appearance", "seo", "social", "email", "payment", "api", "advanced"],
+      "default": "general",
+      "title": "Category"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false,
+      "title": "Public Setting"
+    }
+  },
+  "required": ["setting_key", "setting_value", "setting_type", "category"]
+}

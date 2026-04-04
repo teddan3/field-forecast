@@ -5,6 +5,9 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import AdminLogin from './components/AdminLogin';
+
+const DEV_MODE = true;
 
 // Layouts
 import PublicLayout from './components/layout/PublicLayout';
@@ -12,6 +15,8 @@ import AdminLayout from './components/layout/AdminLayout';
 
 // Public pages
 import Home from './pages/Home';
+import Login from './pages/Login';
+import CmsPage from './pages/CmsPage';
 import FreeOdds from './pages/FreeOdds';
 import PremiumOdds from './pages/PremiumOdds';
 import SportsCategories from './pages/SportsCategories';
@@ -32,6 +37,14 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminPlans from './pages/admin/AdminPlans';
 import AdminContacts from './pages/admin/AdminContacts';
 import AdminSports from './pages/admin/AdminSports';
+import AdminMedia from './pages/admin/AdminMedia';
+import AdminPayments from './pages/admin/AdminPayments';
+import AdminApiSettings from './pages/admin/AdminApiSettings';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminActivityLog from './pages/admin/AdminActivityLog';
+import AdminRoles from './pages/admin/AdminRoles';
+import AdminPageBuilder from './pages/admin/AdminPageBuilder';
+import AdminPageSections from './pages/admin/AdminPageSections';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -50,7 +63,6 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
@@ -59,9 +71,15 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      {/* Dev Admin Login */}
+      {DEV_MODE && (
+        <Route path="/admin/login" element={<AdminLogin />} />
+      )}
+
       {/* Public routes */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/free-odds" element={<FreeOdds />} />
         <Route path="/premium-odds" element={<PremiumOdds />} />
         <Route path="/sports" element={<SportsCategories />} />
@@ -69,21 +87,30 @@ const AuthenticatedApp = () => {
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/page/:slug" element={<CmsPage />} />
       </Route>
 
       {/* Admin routes */}
       <Route element={<AdminLayout />}>
         <Route path="/admin" element={<Dashboard />} />
+        <Route path="/admin/pagebuilder" element={<AdminPageBuilder />} />
         <Route path="/admin/odds" element={<AdminOdds />} />
         <Route path="/admin/matches" element={<AdminMatches />} />
         <Route path="/admin/content" element={<AdminContent />} />
         <Route path="/admin/homepage" element={<AdminHomepage />} />
         <Route path="/admin/seo" element={<AdminSeo />} />
         <Route path="/admin/blog" element={<AdminBlog />} />
+        <Route path="/admin/media" element={<AdminMedia />} />
         <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/roles" element={<AdminRoles />} />
         <Route path="/admin/plans" element={<AdminPlans />} />
+        <Route path="/admin/payments" element={<AdminPayments />} />
+        <Route path="/admin/sections" element={<AdminPageSections />} />
         <Route path="/admin/contacts" element={<AdminContacts />} />
         <Route path="/admin/sports" element={<AdminSports />} />
+        <Route path="/admin/api" element={<AdminApiSettings />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/admin/activity" element={<AdminActivityLog />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

@@ -1,0 +1,63 @@
+{
+  "name": "ApiSetting",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "title": "Provider Name"
+    },
+    "api_name": {
+      "type": "string",
+      "title": "API Name (e.g., sports, odds, livescore)"
+    },
+    "base_url": {
+      "type": "string",
+      "title": "Base URL"
+    },
+    "api_key": {
+      "type": "string",
+      "title": "API Key"
+    },
+    "api_secret": {
+      "type": "string",
+      "title": "API Secret"
+    },
+    "webhook_url": {
+      "type": "string",
+      "title": "Webhook URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "error"],
+      "default": "inactive",
+      "title": "Status"
+    },
+    "last_sync": {
+      "type": "string",
+      "title": "Last Sync Date"
+    },
+    "sync_interval_minutes": {
+      "type": "number",
+      "default": 30,
+      "title": "Sync Interval (minutes)"
+    },
+    "sports_filter": {
+      "type": "string",
+      "title": "Sports Filter (comma-separated IDs)"
+    },
+    "leagues_filter": {
+      "type": "string",
+      "title": "Leagues Filter (comma-separated IDs)"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false,
+      "title": "Default Provider"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": ["provider", "api_name", "base_url"]
+}

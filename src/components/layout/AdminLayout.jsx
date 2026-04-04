@@ -1,31 +1,49 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Trophy, Calendar, FileText, Search, Users, Mail, CreditCard, Settings, ChevronLeft, Shield, Newspaper, Home } from 'lucide-react';
+import { LayoutDashboard, Trophy, Calendar, FileText, Search, Users, Mail, CreditCard, Settings, ChevronLeft, Shield, Newspaper, Home, Image, DollarSign, Key, Activity, LogOut, User, LayoutTemplate, Layers, Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useCurrentUser from '../../hooks/useCurrentUser';
 import { useEffect } from 'react';
+import localDb from '@/lib/localDb';
+
+const DEV_MODE = true;
 
 const adminLinks = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/sections', label: 'Page Sections', icon: Edit3 },
+  { to: '/admin/pagebuilder', label: 'Page Builder', icon: LayoutTemplate },
   { to: '/admin/odds', label: 'Odds', icon: Trophy },
   { to: '/admin/matches', label: 'Matches', icon: Calendar },
-  { to: '/admin/content', label: 'Pages & CMS', icon: FileText },
-  { to: '/admin/homepage', label: 'Homepage', icon: Home },
+  { to: '/admin/content', label: 'Pages', icon: FileText },
   { to: '/admin/seo', label: 'SEO', icon: Search },
   { to: '/admin/blog', label: 'Blog', icon: Newspaper },
+  { to: '/admin/media', label: 'Media', icon: Image },
   { to: '/admin/users', label: 'Users', icon: Users },
+  { to: '/admin/roles', label: 'Roles', icon: Shield },
   { to: '/admin/plans', label: 'Plans', icon: CreditCard },
+  { to: '/admin/payments', label: 'Payments', icon: DollarSign },
   { to: '/admin/contacts', label: 'Messages', icon: Mail },
-  { to: '/admin/sports', label: 'Sports/Leagues', icon: Settings },
+  { to: '/admin/sports', label: 'Sports', icon: Settings },
+  { to: '/admin/api', label: 'API Settings', icon: Key },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
+  { to: '/admin/activity', label: 'Activity', icon: Activity },
 ];
 
 export default function AdminLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, loading } = useCurrentUser();
+  const { user, isAdmin, loading } = useCurrentUser();
 
   useEffect(() => {
+    if (DEV_MODE) return;
     if (!loading && !isAdmin) navigate('/');
   }, [loading, isAdmin, navigate]);
+
+  const handleLogout = () => {
+    if (DEV_MODE) {
+      localStorage.removeItem('dev_user');
+      window.location.href = '/admin/login';
+    }
+  };
 
   if (loading) return (
     <div className="fixed inset-0 flex items-center justify-center bg-sidebar">
@@ -33,7 +51,9 @@ export default function AdminLayout() {
     </div>
   );
 
-  if (!isAdmin) return null;
+  if (!DEV_MODE && !isAdmin) return null;
+
+  const currentUser = user || { full_name: 'Admin User', role: 'admin' };
 
   return (
     <div className="flex min-h-screen bg-sidebar text-sidebar-foreground">
@@ -44,9 +64,23 @@ export default function AdminLayout() {
             <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
               <Shield className="w-4 h-4 text-sidebar-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold">Alpha Admin</span>
+            <span className="font-heading text-lg font-bold">Field Forecast</span>
           </Link>
         </div>
+        
+        {/* Dev Mode User Info */}
+        {DEV_MODE && currentUser && (
+          <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/30">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-primary/10">
+              <User className="w-4 h-4 text-sidebar-primary" />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-sidebar-foreground truncate">{currentUser.full_name}</div>
+                <div className="text-[10px] text-sidebar-primary uppercase font-bold">{currentUser.role}</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {adminLinks.map(link => {
             const Icon = link.icon;
@@ -70,7 +104,11 @@ export default function AdminLayout() {
             );
           })}
         </nav>
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-3 border-t border-sidebar-border space-y-1">
+          <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground/60 hover:text-destructive transition-colors w-full">
+            <LogOut className="w-4 h-4" />
+            {DEV_MODE ? 'Switch User' : 'Logout'}
+          </button>
           <Link to="/" className="flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">
             <ChevronLeft className="w-4 h-4" />
             Back to Site
@@ -80,7 +118,7 @@ export default function AdminLayout() {
 
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-sidebar border-b border-sidebar-border px-4 h-14 flex items-center justify-between">
-        <span className="font-heading text-sm font-bold">Alpha Admin</span>
+        <span className="font-heading text-sm font-bold">Field Forecast</span>
         <Link to="/" className="text-xs text-sidebar-foreground/60">Back to site</Link>
       </div>
 

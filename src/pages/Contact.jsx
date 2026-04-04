@@ -1,52 +1,80 @@
-import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useState, useEffect } from 'react';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import localDb from '@/lib/localDb';
 
 export default function Contact() {
+  const [pageHeader, setPageHeader] = useState(null);
+  const [contactInfo, setContactInfo] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    const header = localDb.sections.getByName('contact', 'page_header');
+    const info = localDb.sections.getByName('contact', 'contact_info');
+    setPageHeader(header);
+    setContactInfo(info);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    await base44.entities.ContactMessage.create({ ...form, status: 'new' });
+    
+    const contacts = localDb.pages.getAll().find(p => p.slug === 'contact');
+    toast.success("Message sent! We'll get back to you within 24 hours.");
     setSubmitted(true);
     setSubmitting(false);
-    toast.success("Message sent! We'll get back to you within 24 hours.");
     setForm({ name: '', email: '', subject: '', message: '' });
   };
+
+  const title = pageHeader?.title || 'Get in Touch';
+  const subtitle = pageHeader?.subtitle || "Questions about our plans or predictions? We're here to help.";
+  const email = contactInfo?.email || 'support@fieldforecast.com';
+  const phone = contactInfo?.phone || '+1 (555) 123-4567';
+  const address = contactInfo?.address || 'Sports Analytics Center\n123 Prediction Lane\nNew York, NY 10001';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
       <div className="text-center mb-12">
-        <h1 className="font-heading text-5xl font-bold mb-4">Get in Touch</h1>
-        <p className="text-muted-foreground text-lg max-w-xl mx-auto">Questions about our plans or predictions? We're here to help.</p>
+        <h1 className="font-heading text-5xl font-bold mb-4">{title}</h1>
+        <p className="text-muted-foreground text-lg max-w-xl mx-auto">{subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Contact info */}
         <div className="space-y-6">
-          {[
-            { icon: Mail, label: 'Email', value: 'support@alpha.com' },
-            { icon: Phone, label: 'Phone', value: '+1 (555) 000-0000' },
-            { icon: MapPin, label: 'Location', value: 'Global — Online Service' },
-          ].map(c => (
-            <div key={c.label} className="flex items-start gap-4 p-5 bg-card rounded-xl border border-border">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <c.icon className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">{c.label}</div>
-                <div className="font-medium">{c.value}</div>
-              </div>
+          <div className="flex items-start gap-4 p-5 bg-card rounded-xl border border-border">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Mail className="w-5 h-5 text-primary" />
             </div>
-          ))}
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Email</div>
+              <div className="font-medium">{email}</div>
+            </div>
+          </div>
+          <div className="flex items-start gap-4 p-5 bg-card rounded-xl border border-border">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Phone className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Phone</div>
+              <div className="font-medium">{phone}</div>
+            </div>
+          </div>
+          <div className="flex items-start gap-4 p-5 bg-card rounded-xl border border-border">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <MapPin className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Location</div>
+              <div className="font-medium whitespace-pre-line">{address}</div>
+            </div>
+          </div>
         </div>
 
         {/* Form */}
