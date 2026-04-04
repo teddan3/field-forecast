@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import localDb from '@/lib/localDb';
-import { Settings as SettingsIcon, Globe, Palette, Search, Mail, CreditCard, Code, Save, RefreshCw } from 'lucide-react';
+import { Settings as SettingsIcon, Globe, Palette, Search, Mail, CreditCard, Code, Save, RefreshCw, Shield, Lock, Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,10 +9,12 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import useCurrentUser from '@/hooks/useCurrentUser';
 
 const categories = [
   { value: 'general', label: 'General', icon: Globe },
   { value: 'appearance', label: 'Appearance', icon: Palette },
+  { value: 'security', label: 'Security', icon: Shield },
   { value: 'seo', label: 'SEO', icon: Search },
   { value: 'email', label: 'Email', icon: Mail },
   { value: 'payment', label: 'Payment', icon: CreditCard },
@@ -80,6 +82,18 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const { user } = useCurrentUser();
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -115,6 +129,46 @@ export default function AdminSettings() {
       toast.error('Failed to save settings');
     }
     setSaving(false);
+  };
+
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+    // Validate current password
+    if (currentPassword !== user?.password) {
+      setPasswordError('Current password is incorrect');
+      return;
+    }
+
+    // Validate new password
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+
+    // Validate password match
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      localDb.users.update(user.id, { password: newPassword });
+      const updatedUser = { ...user, password: newPassword };
+      localStorage.setItem('ff_current_user', JSON.stringify(updatedUser));
+      toast.success('Password changed successfully');
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (err) {
+      setPasswordError('Failed to change password');
+    }
+    setChangingPassword(false);
   };
 
   const getSettingValue = (key, type) => {
@@ -158,46 +212,161 @@ export default function AdminSettings() {
             );
           })}
         </TabsList>
+
         {categories.map(c => (
           <TabsContent key={c.value} value={c.value}>
-            <div className="bg-sidebar-accent rounded-xl border border-sidebar-border p-6">
-              <h2 className="font-heading text-lg font-semibold text-sidebar-foreground mb-6">{c.label} Settings</h2>
-              <div className="space-y-6">
-                {defaultSettings[c.value]?.map(setting => (
-                  <div key={setting.key} className="flex items-start justify-between gap-8">
-                    <div className="flex-1">
-                      <Label className="text-sidebar-foreground font-medium">{setting.label}</Label>
-                      <p className="text-xs text-sidebar-foreground/50 mt-0.5">{setting.description}</p>
-                    </div>
-                    <div className="w-64">
-                      {setting.type === 'boolean' ? (
-                        <div className="flex items-center justify-end">
-                          <Switch
-                            checked={getSettingValue(setting.key, setting.type)}
-                            onCheckedChange={(v) => updateSetting(setting.key, v)}
-                          />
-                        </div>
-                      ) : setting.type === 'password' ? (
-                        <Input
-                          type="password"
-                          value={getSettingValue(setting.key, setting.type)}
-                          onChange={(e) => updateSetting(setting.key, e.target.value)}
-                          placeholder={setting.placeholder}
-                          className="font-mono text-sm"
-                        />
-                      ) : (
-                        <Input
-                          value={getSettingValue(setting.key, setting.type)}
-                          onChange={(e) => updateSetting(setting.key, e.target.value)}
-                          placeholder={setting.placeholder}
-                          className={cn(setting.type === 'text' && 'font-mono text-sm')}
-                        />
-                      )}
+            {c.value === 'security' ? (
+              /* Security Tab - Password Change */
+              <div className="bg-sidebar-accent rounded-xl border border-sidebar-border p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-sidebar-primary/10 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-sidebar-primary" />
+                  </div>
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold text-sidebar-foreground">Change Password</h2>
+                    <p className="text-xs text-sidebar-foreground/50">Update your admin account password</p>
+                  </div>
+                </div>
+
+                {passwordError && (
+                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm">{passwordError}</span>
+                  </div>
+                )}
+
+                {passwordSuccess && (
+                  <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2 text-green-400">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm">Password changed successfully!</span>
+                  </div>
+                )}
+
+                <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+                  <div>
+                    <Label className="text-sidebar-foreground font-medium">Current Password</Label>
+                    <div className="relative mt-1.5">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sidebar-foreground/40" />
+                      <Input
+                        type={showPasswords ? 'text' : 'password'}
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                        placeholder="Enter current password"
+                        required
+                        className="pl-10"
+                      />
                     </div>
                   </div>
-                ))}
+
+                  <div>
+                    <Label className="text-sidebar-foreground font-medium">New Password</Label>
+                    <div className="relative mt-1.5">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sidebar-foreground/40" />
+                      <Input
+                        type={showPasswords ? 'text' : 'password'}
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                        placeholder="Enter new password (min 6 characters)"
+                        required
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sidebar-foreground font-medium">Confirm New Password</Label>
+                    <div className="relative mt-1.5">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sidebar-foreground/40" />
+                      <Input
+                        type={showPasswords ? 'text' : 'password'}
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        placeholder="Confirm new password"
+                        required
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPasswords(!showPasswords)}
+                      className="gap-2"
+                    >
+                      {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPasswords ? 'Hide' : 'Show'} Passwords
+                    </Button>
+                  </div>
+
+                  <div className="pt-4">
+                    <Button type="submit" disabled={changingPassword} className="gap-2">
+                      <Lock className="w-4 h-4" />
+                      {changingPassword ? 'Changing...' : 'Change Password'}
+                    </Button>
+                  </div>
+                </form>
+
+                <div className="mt-8 p-4 bg-sidebar-border/50 rounded-lg">
+                  <h3 className="text-sm font-medium text-sidebar-foreground mb-2">Password Requirements</h3>
+                  <ul className="text-xs text-sidebar-foreground/60 space-y-1">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3 h-3 text-green-500" />
+                      At least 6 characters long
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3 h-3 text-green-500" />
+                      Use a mix of letters, numbers, and symbols
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-3 h-3 text-green-500" />
+                      Don't use easily guessed passwords
+                    </li>
+                  </ul>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-sidebar-accent rounded-xl border border-sidebar-border p-6">
+                <h2 className="font-heading text-lg font-semibold text-sidebar-foreground mb-6">{c.label} Settings</h2>
+                <div className="space-y-6">
+                  {defaultSettings[c.value]?.map(setting => (
+                    <div key={setting.key} className="flex items-start justify-between gap-8">
+                      <div className="flex-1">
+                        <Label className="text-sidebar-foreground font-medium">{setting.label}</Label>
+                        <p className="text-xs text-sidebar-foreground/50 mt-0.5">{setting.description}</p>
+                      </div>
+                      <div className="w-64">
+                        {setting.type === 'boolean' ? (
+                          <div className="flex items-center justify-end">
+                            <Switch
+                              checked={getSettingValue(setting.key, setting.type)}
+                              onCheckedChange={(v) => updateSetting(setting.key, v)}
+                            />
+                          </div>
+                        ) : setting.type === 'password' ? (
+                          <Input
+                            type="password"
+                            value={getSettingValue(setting.key, setting.type)}
+                            onChange={(e) => updateSetting(setting.key, e.target.value)}
+                            placeholder={setting.placeholder}
+                            className="font-mono text-sm"
+                          />
+                        ) : (
+                          <Input
+                            value={getSettingValue(setting.key, setting.type)}
+                            onChange={(e) => updateSetting(setting.key, e.target.value)}
+                            placeholder={setting.placeholder}
+                            className={cn(setting.type === 'text' && 'font-mono text-sm')}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </TabsContent>
         ))}
       </Tabs>
