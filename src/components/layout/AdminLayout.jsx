@@ -3,9 +3,6 @@ import { LayoutDashboard, Trophy, Calendar, FileText, Search, Users, Mail, Credi
 import { cn } from '@/lib/utils';
 import useCurrentUser from '../../hooks/useCurrentUser';
 import { useEffect } from 'react';
-import localDb from '@/lib/localDb';
-
-const DEV_MODE = true;
 
 const adminLinks = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -34,15 +31,15 @@ export default function AdminLayout() {
   const { user, isAdmin, loading } = useCurrentUser();
 
   useEffect(() => {
-    if (DEV_MODE) return;
-    if (!loading && !isAdmin) navigate('/');
-  }, [loading, isAdmin, navigate]);
+    if (loading) return;
+    if (!user || !isAdmin) {
+      navigate('/admin/login');
+    }
+  }, [loading, user, isAdmin, navigate]);
 
   const handleLogout = () => {
-    if (DEV_MODE) {
-      localStorage.removeItem('dev_user');
-      window.location.href = '/admin/login';
-    }
+    localStorage.removeItem('dev_user');
+    window.location.href = '/admin/login';
   };
 
   if (loading) return (
@@ -51,9 +48,18 @@ export default function AdminLayout() {
     </div>
   );
 
-  if (!DEV_MODE && !isAdmin) return null;
+  if (!user || !isAdmin) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-sidebar">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-sidebar-border border-t-sidebar-primary rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sidebar-foreground/60">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const currentUser = user || { full_name: 'Admin User', role: 'admin' };
+  const currentUser = user;
 
   return (
     <div className="flex min-h-screen bg-sidebar text-sidebar-foreground">
@@ -68,18 +74,16 @@ export default function AdminLayout() {
           </Link>
         </div>
         
-        {/* Dev Mode User Info */}
-        {DEV_MODE && currentUser && (
-          <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/30">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-primary/10">
-              <User className="w-4 h-4 text-sidebar-primary" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-sidebar-foreground truncate">{currentUser.full_name}</div>
-                <div className="text-[10px] text-sidebar-primary uppercase font-bold">{currentUser.role}</div>
-              </div>
+        {/* User Info */}
+        <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/30">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-primary/10">
+            <User className="w-4 h-4 text-sidebar-primary" />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium text-sidebar-foreground truncate">{currentUser.full_name}</div>
+              <div className="text-[10px] text-sidebar-primary uppercase font-bold">{currentUser.role}</div>
             </div>
           </div>
-        )}
+        </div>
         
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {adminLinks.map(link => {
@@ -107,7 +111,7 @@ export default function AdminLayout() {
         <div className="p-3 border-t border-sidebar-border space-y-1">
           <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground/60 hover:text-destructive transition-colors w-full">
             <LogOut className="w-4 h-4" />
-            {DEV_MODE ? 'Switch User' : 'Logout'}
+            Logout
           </button>
           <Link to="/" className="flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">
             <ChevronLeft className="w-4 h-4" />
