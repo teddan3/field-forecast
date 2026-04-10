@@ -11,7 +11,7 @@ const navLinks = [
   { to: '/free-odds', label: 'Free Odds' },
   { to: '/premium-odds', label: 'Premium Odds' },
   { to: '/sports', label: 'Sports' },
-  { to: '/pricing', label: 'Pricing' },
+  { to: '/community', label: 'Community' },
   { to: '/blog', label: 'Blog' },
   { to: '/contact', label: 'Contact' },
 ];
@@ -32,8 +32,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="Field Forecast Logo" className="h-12 w-auto max-w-[180px] object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} style={{display: 'none'}} />
-            <span className="font-heading text-xl font-bold tracking-tight hidden">Field Forecast</span>
+            <img src="/logo.png" alt="Field Forecast Logo" className="h-12 w-auto max-w-[180px] object-contain" />
+            <span className="font-heading text-xl font-bold tracking-tight">Field Forecast</span>
           </Link>
 
           {/* Desktop Nav */}

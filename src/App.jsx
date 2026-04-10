@@ -24,6 +24,7 @@ import MembershipPricing from './pages/MembershipPricing';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Contact from './pages/Contact';
+import Community from './pages/Community';
 
 // Admin pages
 import Dashboard from './pages/admin/Dashboard';
@@ -87,6 +88,7 @@ const AuthenticatedApp = () => {
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/community" element={<Community />} />
         <Route path="/page/:slug" element={<CmsPage />} />
       </Route>
 
