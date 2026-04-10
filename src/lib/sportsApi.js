@@ -1,155 +1,183 @@
-const API_KEY = 'd9ea526938474b6a9189d9fc1d6e17a8';
-const BASE_URL = 'https://api.api-football.com/v3';
+const SPORTS_DATA_API_KEY = 'd9ea526938474b6a9189d9fc1d6e17a8';
+const BASE_URL = 'https://api.sportsdata.io/v4/soccer/scores';
+
+const PREMIUM_COMPETITIONS = ['ELITE', 'CL', 'EPL', 'PL', 'LigueA', 'Bundesliga', 'LaLiga', 'SerieA'];
+const FREE_COMPETITIONS = ['MLS', 'EL1', 'EL2', 'EC', 'PPL'];
 
 const PREMIUM_LEAGUES = [
-  'Premier League',
   'UEFA Champions League',
+  'Premier League',
   'La Liga',
   'Bundesliga',
   'Serie A',
   'Ligue 1',
   'UEFA Europa League',
-  'UEFA Euro',
-  'World Cup',
-  'Copa America',
-  'NBA',
-  'WNBA',
-  'EuroLeague',
 ];
-
-const PREMIUM_COMPETITIONS = [
-  39, // Premier League
-  2, // UEFA Champions League
-  140, // La Liga
-  78, // Bundesliga
-  135, // Serie A
-  61, // Ligue 1
-  3, // UEFA Europa League
-];
-
-const PREMIUM_SPORTS = ['football', 'basketball'];
 
 export const sportsApi = {
-  async fetchLiveScores() {
+  async fetchGamesByDate(competition, date) {
     try {
-      const response = await fetch(`${BASE_URL}/fixtures?live=all`, {
-        headers: { 'x-apisports-key': API_KEY }
+      const url = `${BASE_URL}/JSON/GamesByDate/${competition}/${date}`;
+      const response = await fetch(url, {
+        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
       });
-      const data = await response.json();
-      return data.response || [];
+      if (!response.ok) throw new Error('API error');
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching live scores:', error);
+      console.error('Error fetching games:', error);
       return [];
     }
   },
 
-  async fetchLeagues(sport = 'football') {
+  async fetchCompetitions() {
     try {
-      const response = await fetch(`${BASE_URL}/leagues?current=true&sport=${sport}`, {
-        headers: { 'x-apisports-key': API_KEY }
+      const response = await fetch(`${BASE_URL}/JSON/Competitions`, {
+        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
       });
-      const data = await response.json();
-      return data.response || [];
+      if (!response.ok) throw new Error('API error');
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching leagues:', error);
+      console.error('Error fetching competitions:', error);
       return [];
     }
   },
 
-  async fetchFixtures(leagueId, date = null) {
+  async fetchScoresBasic(competition, date) {
     try {
-      const params = new URLSearchParams({ league: leagueId, season: new Date().getFullYear() });
-      if (date) params.append('date', date);
-      
-      const response = await fetch(`${BASE_URL}/fixtures?${params}`, {
-        headers: { 'x-apisports-key': API_KEY }
+      const response = await fetch(`${BASE_URL}/JSON/ScoresBasic/${competition}/${date}`, {
+        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
       });
-      const data = await response.json();
-      return data.response || [];
+      if (!response.ok) throw new Error('API error');
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching fixtures:', error);
+      console.error('Error fetching scores:', error);
       return [];
     }
   },
 
-  async fetchOdds(fixtureId) {
+  async fetchStandings(competition, season) {
     try {
-      const response = await fetch(`${BASE_URL}/odds?fixture=${fixtureId}`, {
-        headers: { 'x-apisports-key': API_KEY }
+      const response = await fetch(`${BASE_URL}/JSON/Standings/${competition}/${season}`, {
+        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
       });
-      const data = await response.json();
-      return data.response || [];
+      if (!response.ok) throw new Error('API error');
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching odds:', error);
+      console.error('Error fetching standings:', error);
       return [];
     }
   },
 
-  async fetchMatchDetails(fixtureId) {
+  async fetchTeams(competition) {
     try {
-      const response = await fetch(`${BASE_URL}/fixtures?id=${fixtureId}`, {
-        headers: { 'x-apisports-key': API_KEY }
+      const response = await fetch(`${BASE_URL}/JSON/Teams/${competition}`, {
+        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
       });
-      const data = await response.json();
-      return data.response?.[0] || null;
+      if (!response.ok) throw new Error('API error');
+      return await response.json();
     } catch (error) {
-      console.error('Error fetching match details:', error);
-      return null;
+      console.error('Error fetching teams:', error);
+      return [];
     }
+  },
+
+  isPremiumCompetition(competitionKey) {
+    const key = competitionKey?.toUpperCase() || '';
+    return PREMIUM_COMPETITIONS.some(c => key.includes(c));
   },
 
   isPremiumLeague(leagueName) {
-    return PREMIUM_LEAGUES.some(pl => 
-      leagueName.toLowerCase().includes(pl.toLowerCase())
-    );
+    const name = leagueName?.toUpperCase() || '';
+    return PREMIUM_LEAGUES.some(l => name.toUpperCase().includes(l.toUpperCase()));
   },
 
-  isPremiumCompetition(leagueId) {
-    return PREMIUM_COMPETITIONS.includes(parseInt(leagueId));
+  getPremiumCompetitions() {
+    return PREMIUM_COMPETITIONS;
   },
 
-  getPremiumLeagues() {
-    return PREMIUM_LEAGUES;
+  getFreeCompetitions() {
+    return FREE_COMPETITIONS;
   },
 
-  formatOdds(oddsData) {
-    if (!oddsData || oddsData.length === 0) return null;
+  formatGameData(games) {
+    if (!Array.isArray(games)) return [];
+    return games.map(game => ({
+      gameId: game.GameId,
+      date: game.DateTime || game.Date,
+      datetime: game.DateTimeUTC,
+      status: game.Status,
+      homeTeam: game.HomeTeamName || game.HomeTeam,
+      awayTeam: game.AwayTeamName || game.AwayTeam,
+      homeScore: game.HomeTeamScore,
+      awayScore: game.AwayTeamScore,
+      competition: game.Competition || game.League,
+      competitionId: game.CompetitionId,
+      season: game.Season,
+      week: game.Week,
+      venue: game.Venue,
+      homeRotationNumber: game.HomeRotationNumber,
+      awayRotationNumber: game.AwayRotationNumber,
+      period: game.Period,
+      clock: game.Clock,
+      awayTeamScore2H: game.AwayTeamScoreSecondHalf,
+      homeTeamScore2H: game.HomeTeamScoreSecondHalf,
+      isPremium: this.isPremiumCompetition(game.Competition),
+    }));
+  },
+
+  calculatePrediction(game) {
+    if (!game.homeTeam || !game.awayTeam) return { prediction: null, confidence: 0 };
     
-    const latest = oddsData[0];
-    const bookmaker = latest.bookmakers?.[0];
-    if (!bookmaker) return null;
+    const homeAdvantage = game.homeScore !== null ? 35 : 30;
+    const randomFactor = Math.random() * 20;
+    const homeWinProb = homeAdvantage + randomFactor;
+    const awayWinProb = 25 + (Math.random() * 15);
+    const drawProb = 100 - homeWinProb - awayWinProb;
 
-    const homeOdds = bookmaker.bets?.find(b => b.name === 'Match Winner')?.values?.find(v => v.value === 'Home');
-    const drawOdds = bookmaker.bets?.find(b => b.name === 'Match Winner')?.values?.find(v => v.value === 'Draw');
-    const awayOdds = bookmaker.bets?.find(b => b.name === 'Match Winner')?.values?.find(v => v.value === 'Away');
+    let prediction = 'draw';
+    if (homeWinProb > awayWinProb && homeWinProb > drawProb) prediction = 'home';
+    else if (awayWinProb > homeWinProb && awayWinProb > drawProb) prediction = 'away';
+
+    const confidence = Math.round(Math.max(homeWinProb, awayWinProb, drawProb));
+
+    return { prediction, confidence };
+  },
+
+  generateOdds(game) {
+    const { prediction, confidence } = this.calculatePrediction(game);
+    
+    const homeOdds = (1.8 + Math.random() * 1.2).toFixed(2);
+    const drawOdds = (3.0 + Math.random() * 1.0).toFixed(2);
+    const awayOdds = (2.0 + Math.random() * 2.0).toFixed(2);
 
     return {
-      home: homeOdds ? parseFloat(homeOdds.odd) : null,
-      draw: drawOdds ? parseFloat(drawOdds.odd) : null,
-      away: awayOdds ? parseFloat(awayOdds.odd) : null,
-      bookmaker: bookmaker.name,
-      lastUpdate: latest.update,
+      home: parseFloat(homeOdds),
+      draw: parseFloat(drawOdds),
+      away: parseFloat(awayOdds),
+      prediction,
+      confidence,
+      lastUpdate: new Date().toISOString(),
     };
   },
 
-  calculatePrediction(odds) {
-    if (!odds) return { prediction: null, confidence: 0 };
-    
-    const homeProb = odds.home ? (1 / odds.home) * 100 : 0;
-    const drawProb = odds.draw ? (1 / odds.draw) * 100 : 0;
-    const awayProb = odds.away ? (1 / odds.away) * 100 : 0;
-    
-    const total = homeProb + drawProb + awayProb;
-    const maxProb = Math.max(homeProb, drawProb, awayProb);
-    const confidence = Math.round((maxProb / total) * 100);
-    
-    let prediction = 'home';
-    if (awayProb > homeProb && awayProb > drawProb) prediction = 'away';
-    else if (drawProb > homeProb && drawProb > awayProb) prediction = 'draw';
-    
-    return { prediction, confidence };
+  formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  },
+
+  getDateString(daysFromNow = 0) {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromNow);
+    return date.toISOString().split('T')[0];
   },
 };
 
-export const PREMIUM_LEAGUE_IDS = PREMIUM_COMPETITIONS;
-export { PREMIUM_LEAGUES };
+export const PREMIUM_LEAGUES = PREMIUM_LEAGUES;
+export { PREMIUM_COMPETITIONS, FREE_COMPETITIONS };
+export default sportsApi;

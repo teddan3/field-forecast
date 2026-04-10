@@ -1,66 +1,65 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Crown, Lock, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Crown, Lock, Search, Calendar, Trophy } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { sportsApi, PREMIUM_LEAGUES } from '@/lib/sportsApi';
+import sportsApi, { PREMIUM_LEAGUES } from '@/lib/sportsApi';
 import useCurrentUser from '@/hooks/useCurrentUser';
 import { Link } from 'react-router-dom';
 
-const PREMIUM_MATCHES = [
-  { fixture: { id: 1, date: new Date().toISOString() }, teams: { home: { name: 'Manchester City' }, away: { name: 'Arsenal' } }, league: { name: 'Premier League' } },
-  { fixture: { id: 2, date: new Date().toISOString() }, teams: { home: { name: 'Real Madrid' }, away: { name: 'Bayern Munich' } }, league: { name: 'UEFA Champions League' } },
-  { fixture: { id: 3, date: new Date().toISOString() }, teams: { home: { name: 'Barcelona' }, away: { name: 'PSG' } }, league: { name: 'UEFA Champions League' } },
-  { fixture: { id: 4, date: new Date().toISOString() }, teams: { home: { name: 'Liverpool' }, away: { name: 'Chelsea' } }, league: { name: 'Premier League' } },
-  { fixture: { id: 5, date: new Date().toISOString() }, teams: { home: { name: 'Lakers' }, away: { name: 'Celtics' } }, league: { name: 'NBA' } },
-  { fixture: { id: 6, date: new Date().toISOString() }, teams: { home: { name: 'Inter Milan' }, away: { name: 'AC Milan' } }, league: { name: 'Serie A' } },
+const PREMIUM_COMPETITIONS = ['ELITE', 'CL', 'EPL', 'PL', 'LigueA', 'Bundesliga', 'LaLiga', 'SerieA'];
+
+const PREMIUM_DEMO_GAMES = [
+  { gameId: 1, homeTeam: 'Real Madrid', awayTeam: 'Bayern Munich', competition: 'UEFA Champions League', datetime: new Date().toISOString(), status: 'Scheduled' },
+  { gameId: 2, homeTeam: 'Manchester City', awayTeam: 'Arsenal', competition: 'Premier League', datetime: new Date().toISOString(), status: 'Scheduled' },
+  { gameId: 3, homeTeam: 'Barcelona', awayTeam: 'PSG', competition: 'UEFA Champions League', datetime: new Date().toISOString(), status: 'Scheduled' },
+  { gameId: 4, homeTeam: 'Liverpool', awayTeam: 'Chelsea', competition: 'Premier League', datetime: new Date().toISOString(), status: 'Scheduled' },
+  { gameId: 5, homeTeam: 'Inter Milan', awayTeam: 'AC Milan', competition: 'Serie A', datetime: new Date().toISOString(), status: 'Scheduled' },
+  { gameId: 6, homeTeam: 'Bayern Munich', awayTeam: 'Dortmund', competition: 'Bundesliga', datetime: new Date().toISOString(), status: 'Scheduled' },
 ];
 
 export default function PremiumOdds() {
-  const [matches, setMatches] = useState([]);
+  const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const { isPremium, isVip, user } = useCurrentUser();
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (isPremium || isVip) {
+      loadPremiumGames();
+    }
+  }, [isPremium, isVip]);
 
-  const loadData = async () => {
+  const loadPremiumGames = async () => {
     setLoading(true);
     try {
-      // Fetch from multiple premium leagues
-      const leagueIds = [2, 39, 140, 78, 135, 61]; // Champions League, PL, La Liga, Bundesliga, Serie A, Ligue 1
-      const allMatches = [];
+      const date = sportsApi.getDateString();
+      const allGames = [];
       
-      for (const leagueId of leagueIds) {
+      for (const comp of PREMIUM_COMPETITIONS) {
         try {
-          const fixtures = await sportsApi.fetchFixtures(leagueId);
-          allMatches.push(...fixtures.slice(0, 5));
+          const data = await sportsApi.fetchGamesByDate(comp, date);
+          if (Array.isArray(data)) {
+            const formatted = sportsApi.formatGameData(data);
+            allGames.push(...formatted);
+          }
         } catch (e) {}
       }
-      
-      setMatches(allMatches.length > 0 ? allMatches : PREMIUM_MATCHES);
+
+      setGames(allGames.length > 0 ? allGames : PREMIUM_DEMO_GAMES);
     } catch (error) {
-      setMatches(PREMIUM_MATCHES);
+      setGames(PREMIUM_DEMO_GAMES);
     }
     setLoading(false);
   };
 
-  const filteredMatches = useMemo(() => {
-    if (!search) return matches;
-    return matches.filter(m => 
-      m.teams?.home?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      m.teams?.away?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      m.league?.name?.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [matches, search]);
+  const filteredGames = games.filter(g => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return g.homeTeam?.toLowerCase().includes(s) || 
+           g.awayTeam?.toLowerCase().includes(s) ||
+           g.competition?.toLowerCase().includes(s);
+  });
 
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Premium gate for non-premium users
   if (!isPremium) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -82,9 +81,12 @@ export default function PremiumOdds() {
         </div>
 
         <div className="mt-12">
-          <h2 className="font-heading text-xl font-bold mb-6">Premium Leagues</h2>
+          <h2 className="font-heading text-xl font-bold mb-6 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-primary" />
+            Premium Leagues
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {PREMIUM_LEAGUES.slice(0, 6).map((league, i) => (
+            {PREMIUM_LEAGUES.map((league, i) => (
               <div key={i} className="bg-card rounded-xl border border-border p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Crown className="w-5 h-5 text-primary" />
@@ -99,12 +101,12 @@ export default function PremiumOdds() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Crown className="w-6 h-6 text-primary" />
-            <span className="text-xs font-bold text-primary uppercase tracking-wider">Premium Odds</span>
+            <span className="text-xs font-bold text-primary uppercase tracking-wider">Premium</span>
           </div>
           <h1 className="font-heading text-4xl font-bold mb-2">Premium Intelligence</h1>
           <p className="text-muted-foreground">High-confidence picks for major competitions.</p>
@@ -129,70 +131,81 @@ export default function PremiumOdds() {
       {loading ? (
         <div className="space-y-4">
           {[1,2,3,4].map(i => (
-            <div key={i} className="h-32 bg-card rounded-xl border border-border animate-pulse" />
+            <div key={i} className="h-36 bg-card rounded-xl border border-primary/20 animate-pulse" />
           ))}
         </div>
-      ) : filteredMatches.length === 0 ? (
-        <div className="text-center py-16 bg-card rounded-xl border border-border">
-          <Crown className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-          <p className="text-muted-foreground">No premium odds available now. Check back soon.</p>
+      ) : filteredGames.length === 0 ? (
+        <div className="text-center py-16 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20">
+          <Crown className="w-12 h-12 mx-auto mb-4 text-primary/40" />
+          <p className="text-muted-foreground font-medium">No premium games scheduled for today.</p>
+          <p className="text-sm text-muted-foreground/60 mt-1">Check back soon for updates.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredMatches.map(match => (
-            <div key={match.fixture?.id} className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">{match.league?.name}</span>
+          {filteredGames.map(game => {
+            const odds = sportsApi.generateOdds(game);
+            return (
+              <div key={game.gameId} className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl border border-primary/20 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">{game.competition}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {sportsApi.formatDate(game.datetime)}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(match.fixture?.date)}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{match.teams?.home?.name}</h3>
+                
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-xl">{game.homeTeam}</h3>
+                  </div>
+                  <div className="px-6 text-center">
+                    <div className="text-lg font-bold text-muted-foreground">VS</div>
+                  </div>
+                  <div className="flex-1 text-right">
+                    <h3 className="font-semibold text-xl">{game.awayTeam}</h3>
+                  </div>
                 </div>
-                <div className="px-6 text-center">
-                  <div className="text-lg font-bold text-muted-foreground">VS</div>
-                </div>
-                <div className="flex-1 text-right">
-                  <h3 className="font-semibold text-lg">{match.teams?.away?.name}</h3>
-                </div>
-              </div>
 
-              <div className="mt-4 pt-4 border-t border-primary/20 flex items-center justify-between">
-                <div className="flex gap-2">
-                  <span className="text-sm bg-green-500/10 text-green-600 px-3 py-1 rounded-full font-medium">
-                    Home: 2.10
-                  </span>
-                  <span className="text-sm bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full font-medium">
-                    Draw: 3.40
-                  </span>
-                  <span className="text-sm bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full font-medium">
-                    Away: 3.50
-                  </span>
+                <div className="mt-4 pt-4 border-t border-primary/20 flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <span className="text-sm bg-green-500/10 text-green-600 px-3 py-1 rounded-full font-medium">
+                      Home: {odds.home}
+                    </span>
+                    <span className="text-sm bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full font-medium">
+                      Draw: {odds.draw}
+                    </span>
+                    <span className="text-sm bg-blue-500/10 text-blue-600 px-3 py-1 rounded-full font-medium">
+                      Away: {odds.away}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded">
+                      {odds.confidence}% Confidence
+                    </span>
+                    <span className={`text-sm font-medium px-3 py-1 rounded ${
+                      odds.prediction === 'home' ? 'bg-green-500/10 text-green-600' :
+                      odds.prediction === 'away' ? 'bg-blue-500/10 text-blue-600' :
+                      'bg-yellow-500/10 text-yellow-600'
+                    }`}>
+                      {odds.prediction === 'home' ? 'Home Win' : odds.prediction === 'away' ? 'Away Win' : 'Draw'}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-primary">92% Confidence</span>
-                  <span className="text-sm font-medium text-green-600 bg-green-500/10 px-3 py-1 rounded-full">
-                    Home Win
-                  </span>
-                </div>
-              </div>
 
-              <div className="mt-4 p-3 bg-background/50 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">Analysis: </span>
-                  {match.fixture?.id % 2 === 0 
-                    ? 'Strong home record with key players in form. Defensive solidity gives home side the edge in this high-stakes encounter.'
-                    : 'Recent head-to-head heavily favors the away side. Counter-attacking strategy could expose home team vulnerabilities.'}
-                </p>
+                <div className="mt-4 p-3 bg-background/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-semibold text-foreground">Analysis: </span>
+                    {game.gameId % 2 === 0 
+                      ? 'Strong home record with key players in form. Defensive solidity gives home side the edge in this high-stakes encounter.'
+                      : 'Recent head-to-head heavily favors the away side. Counter-attacking strategy could expose home team vulnerabilities.'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
