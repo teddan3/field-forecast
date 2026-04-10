@@ -1,25 +1,38 @@
 const SPORTRADAR_API_KEY = 'xMRcLHVmioiUNfEgqFPzASu8uyJPvyoWbnhqmNyI';
 const BASE_URL = 'https://api.sportradar.com/soccer/trial/v4/en';
 
-const PREMIUM_COMPETITIONS = [
-  { id: 'sr:competition:7', key: 'ELITE', name: 'UEFA Champions League' },
-  { id: 'sr:competition:17', key: 'EPL', name: 'Premier League' },
-  { id: 'sr:competition:8', key: 'LaLiga', name: 'La Liga' },
-  { id: 'sr:competition:35', key: 'Bundesliga', name: 'Bundesliga' },
-  { id: 'sr:competition:23', key: 'SerieA', name: 'Serie A' },
-  { id: 'sr:competition:34', key: 'LigueA', name: 'Ligue 1' },
-  { id: 'sr:competition:679', key: 'EL', name: 'UEFA Europa League' },
+export const PREMIUM_COMPETITIONS = [
+  { id: 'sr:competition:7', key: 'UCL', name: 'UEFA Champions League', tier: 1 },
+  { id: 'sr:competition:679', key: 'UEL', name: 'UEFA Europa League', tier: 1 },
+  { id: 'sr:competition:17', key: 'EPL', name: 'Premier League', tier: 1 },
+  { id: 'sr:competition:8', key: 'LaLiga', name: 'La Liga', tier: 1 },
+  { id: 'sr:competition:35', key: 'Bundesliga', name: 'Bundesliga', tier: 1 },
+  { id: 'sr:competition:23', key: 'SerieA', name: 'Serie A', tier: 1 },
+  { id: 'sr:competition:34', key: 'Ligue1', name: 'Ligue 1', tier: 1 },
+  { id: 'sr:competition:238', key: 'LigaPortugal', name: 'Liga Portugal', tier: 2 },
+  { id: 'sr:competition:202', key: 'Ekstraklasa', name: 'Ekstraklasa', tier: 2 },
+  { id: 'sr:competition:384', key: 'Libertadores', name: 'CONMEBOL Libertadores', tier: 1 },
 ];
 
-const FREE_COMPETITIONS = [
-  { id: 'sr:competition:242', key: 'MLS', name: 'MLS' },
-  { id: 'sr:competition:37', key: 'EL1', name: 'Eredivisie' },
-  { id: 'sr:competition:155', key: 'ARG', name: 'Argentine Primera' },
-  { id: 'sr:competition:325', key: 'BRA', name: 'Brasileirão' },
-  { id: 'sr:competition:196', key: 'JPN', name: 'J1 League' },
+export const FREE_COMPETITIONS = [
+  { id: 'sr:competition:242', key: 'MLS', name: 'MLS', tier: 3 },
+  { id: 'sr:competition:37', key: 'Eredivisie', name: 'Eredivisie', tier: 2 },
+  { id: 'sr:competition:155', key: 'PrimeraLPF', name: 'Argentine Primera', tier: 2 },
+  { id: 'sr:competition:325', key: 'Brasileirao', name: 'Brasileirão', tier: 2 },
+  { id: 'sr:competition:196', key: 'J1League', name: 'J1 League', tier: 2 },
+  { id: 'sr:competition:649', key: 'CSL', name: 'Chinese Super League', tier: 3 },
+  { id: 'sr:competition:410', key: 'KLeague1', name: 'K League 1', tier: 3 },
+  { id: 'sr:competition:36', key: 'ScottishPrem', name: 'Scottish Premiership', tier: 2 },
+  { id: 'sr:competition:52', key: 'SuperLig', name: 'Süper Lig', tier: 2 },
+  { id: 'sr:competition:955', key: 'SaudiPro', name: 'Saudi Pro League', tier: 2 },
+  { id: 'sr:competition:937', key: 'Botola', name: 'Botola Pro', tier: 3 },
+  { id: 'sr:competition:19', key: 'FACup', name: 'FA Cup', tier: 2 },
+  { id: 'sr:competition:213', key: 'Supercopa', name: 'Supercopa de España', tier: 2 },
+  { id: 'sr:competition:131', key: 'EersteDiv', name: 'Eerste Divisie', tier: 3 },
 ];
 
 const SEASON_CACHE = {};
+let ALL_COMPETITIONS = null;
 
 async function fetchFromSportradar(endpoint) {
   try {
@@ -52,10 +65,38 @@ async function getCurrentSeason(competitionId) {
 }
 
 export const sportradarApi = {
-  async fetchCompetitions() {
+  async fetchAllCompetitions() {
+    if (ALL_COMPETITIONS) return ALL_COMPETITIONS;
     const data = await fetchFromSportradar('/competitions.json');
     if (!data) return [];
-    return data.competitions || [];
+    ALL_COMPETITIONS = data.competitions || [];
+    return ALL_COMPETITIONS;
+  },
+
+  async getCompetitionsByTier() {
+    const all = await this.fetchAllCompetitions();
+    return {
+      tier1: all.filter(c => {
+        const id = c.id;
+        return ['sr:competition:7', 'sr:competition:17', 'sr:competition:8', 
+                'sr:competition:35', 'sr:competition:23', 'sr:competition:34',
+                'sr:competition:679', 'sr:competition:384'].includes(id);
+      }),
+      tier2: all.filter(c => {
+        const id = c.id;
+        return !['sr:competition:7', 'sr:competition:17', 'sr:competition:8', 
+                'sr:competition:35', 'sr:competition:23', 'sr:competition:34',
+                'sr:competition:679', 'sr:competition:384'].includes(id) &&
+               ['sr:category:1', 'sr:category:7', 'sr:category:8', 'sr:category:30', 
+                'sr:category:31', 'sr:category:32', 'sr:category:33', 'sr:category:35',
+                'sr:category:44', 'sr:category:393'].includes(c.category?.id);
+      }),
+      tier3: all.filter(c => {
+        return !['sr:category:1', 'sr:category:7', 'sr:category:8', 'sr:category:30', 
+                'sr:category:31', 'sr:category:32', 'sr:category:33', 'sr:category:35',
+                'sr:category:44', 'sr:category:393'].includes(c.category?.id);
+      }),
+    };
   },
 
   async fetchSeasonSchedule(competitionId) {
@@ -66,73 +107,89 @@ export const sportradarApi = {
     return data.schedules || [];
   },
 
-  async fetchAllFreeGames() {
+  async fetchGamesByCompetition(competitionId) {
+    try {
+      const games = await this.fetchSeasonSchedule(competitionId);
+      return games.map(g => ({
+        ...g,
+        competitionId,
+      }));
+    } catch (e) {
+      console.error(`Error fetching games for ${competitionId}:`, e);
+      return [];
+    }
+  },
+
+  async fetchAllGames() {
+    const premiumIds = PREMIUM_COMPETITIONS.map(c => c.id);
+    const freeIds = FREE_COMPETITIONS.map(c => c.id);
+    const allIds = [...new Set([...premiumIds, ...freeIds])];
+    
     const allGames = [];
-    for (const comp of FREE_COMPETITIONS) {
+    const errors = [];
+    
+    for (const compId of allIds) {
       try {
-        const games = await this.fetchSeasonSchedule(comp.id);
+        const games = await this.fetchGamesByCompetition(compId);
         if (games.length > 0) {
-          allGames.push(...games.map(g => ({
-            ...g,
-            competitionKey: comp.key,
-            competitionName: comp.name
-          })));
+          allGames.push(...games);
         }
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (e) {
-        console.error(`Error fetching ${comp.name}:`, e);
+        errors.push({ compId, error: e.message });
       }
     }
+    
+    return { games: allGames, errors };
+  },
+
+  async fetchAllFreeGames() {
+    const freeIds = FREE_COMPETITIONS.map(c => c.id);
+    const allGames = [];
+    
+    for (const compId of freeIds) {
+      try {
+        const games = await this.fetchGamesByCompetition(compId);
+        if (games.length > 0) {
+          allGames.push(...games);
+        }
+      } catch (e) {
+        console.error(`Error fetching free games for ${compId}:`, e);
+      }
+    }
+    
     return allGames;
   },
 
   async fetchAllPremiumGames() {
+    const premiumIds = PREMIUM_COMPETITIONS.map(c => c.id);
     const allGames = [];
-    for (const comp of PREMIUM_COMPETITIONS) {
+    
+    for (const compId of premiumIds) {
       try {
-        const games = await this.fetchSeasonSchedule(comp.id);
+        const games = await this.fetchGamesByCompetition(compId);
         if (games.length > 0) {
-          allGames.push(...games.map(g => ({
-            ...g,
-            competitionKey: comp.key,
-            competitionName: comp.name
-          })));
+          allGames.push(...games);
         }
       } catch (e) {
-        console.error(`Error fetching ${comp.name}:`, e);
+        console.error(`Error fetching premium games for ${compId}:`, e);
       }
     }
+    
     return allGames;
   },
 
-  async fetchUpcomingMatches(daysAhead = 7) {
-    const today = new Date();
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + daysAhead);
-    
-    const allGames = [...(await this.fetchAllFreeGames()), ...(await this.fetchAllPremiumGames())];
-    
-    return allGames.filter(game => {
-      const gameDate = new Date(game.sport_event?.start_time);
-      return gameDate >= today && gameDate <= endDate;
-    }).sort((a, b) => 
-      new Date(a.sport_event?.start_time) - new Date(b.sport_event?.start_time)
-    );
+  async fetchMatchDetails(sportEventId) {
+    const data = await fetchFromSportradar(`/sport_events/${sportEventId}/summary.json`);
+    return data;
   },
 
-  async fetchLiveMatches() {
-    const allGames = [...(await this.fetchAllFreeGames()), ...(await this.fetchAllPremiumGames())];
-    return allGames.filter(game => 
-      game.sport_event_status?.status === 'live' || 
-      game.sport_event_status?.match_status === 'inprogress'
-    );
-  },
-
-  isPremiumCompetition(competitionKey) {
-    return PREMIUM_COMPETITIONS.some(c => c.key === competitionKey);
-  },
-
-  isPremiumCompetitionById(competitionId) {
+  isPremiumCompetition(competitionId) {
     return PREMIUM_COMPETITIONS.some(c => c.id === competitionId);
+  },
+
+  isPremiumCompetitionByKey(key) {
+    return PREMIUM_COMPETITIONS.some(c => c.key === key);
   },
 
   getPremiumCompetitions() {
@@ -143,6 +200,14 @@ export const sportradarApi = {
     return FREE_COMPETITIONS;
   },
 
+  getAllCompetitionIds() {
+    return [...PREMIUM_COMPETITIONS, ...FREE_COMPETITIONS].map(c => c.id);
+  },
+
+  getCompetitionById(id) {
+    return [...PREMIUM_COMPETITIONS, ...FREE_COMPETITIONS].find(c => c.id === id);
+  },
+
   formatGameData(game) {
     const event = game.sport_event || {};
     const status = game.sport_event_status || {};
@@ -151,7 +216,6 @@ export const sportradarApi = {
     const awayTeam = competitors.find(c => c.qualifier === 'away');
     const context = event.sport_event_context || {};
     const competition = context.competition || {};
-    const season = context.season || {};
     
     return {
       id: event.id,
@@ -162,20 +226,26 @@ export const sportradarApi = {
       isLive: status.status === 'live',
       homeTeam: homeTeam?.name || 'TBD',
       homeTeamAbbr: homeTeam?.abbreviation || 'TBD',
+      homeTeamId: homeTeam?.id,
       awayTeam: awayTeam?.name || 'TBD',
       awayTeamAbbr: awayTeam?.abbreviation || 'TBD',
+      awayTeamId: awayTeam?.id,
       homeScore: status.home_score,
       awayScore: status.away_score,
       competition: competition.name || 'Unknown',
       competitionId: competition.id,
-      competitionKey: game.competitionKey,
-      season: season.name,
+      competitionAltName: competition.alternative_name,
+      season: context.season?.name,
+      seasonId: context.season?.id,
       round: context.round?.number,
+      roundName: context.round?.name,
+      stage: context.stage,
       venue: event.venue?.name,
       city: event.venue?.city_name,
+      country: event.venue?.country_name,
       periodScores: status.period_scores,
       winnerId: status.winner_id,
-      isPremium: this.isPremiumCompetition(game.competitionKey),
+      isPremium: this.isPremiumCompetition(competition.id),
     };
   },
 
@@ -194,7 +264,7 @@ export const sportradarApi = {
     const drawOdds = (2.8 + Math.random() * 1.5).toFixed(2);
     const awayOdds = (1.8 + Math.random() * 2.5).toFixed(2);
 
-    const sportsbooks = ['DraftKings', 'FanDuel', 'BetMGM', 'Caesars', 'PointsBet'];
+    const sportsbooks = ['DraftKings', 'FanDuel', 'BetMGM', 'Caesars', 'PointsBet', 'Bet365', 'Betway'];
     const sportsbookOdds = sportsbooks.map(book => ({
       sportsbook: book,
       home: (parseFloat(homeOdds) + (Math.random() - 0.5) * 0.2).toFixed(2),
@@ -217,6 +287,16 @@ export const sportradarApi = {
   },
 
   formatDate(dateStr) {
+    if (!dateStr) return 'TBD';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  },
+
+  formatDateTime(dateStr) {
     if (!dateStr) return 'TBD';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
@@ -246,23 +326,22 @@ export const sportradarApi = {
   getDemoFreeGames() {
     const now = new Date();
     return [
-      { sport_event: { id: 1, start_time: new Date(now.getTime() + 3600000).toISOString(), competitors: [{ name: 'LA Galaxy', abbreviation: 'LAG', qualifier: 'home' }, { name: 'Seattle Sounders', abbreviation: 'SEA', qualifier: 'away' }], sport_event_context: { competition: { name: 'MLS', id: 'sr:competition:242' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'MLS', competitionName: 'MLS' },
-      { sport_event: { id: 2, start_time: new Date(now.getTime() + 7200000).toISOString(), competitors: [{ name: 'Orlando City', abbreviation: 'ORL', qualifier: 'home' }, { name: 'Inter Miami', abbreviation: 'MIA', qualifier: 'away' }], sport_event_context: { competition: { name: 'MLS', id: 'sr:competition:242' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'MLS', competitionName: 'MLS' },
-      { sport_event: { id: 3, start_time: new Date(now.getTime() + 10800000).toISOString(), competitors: [{ name: 'Ajax', abbreviation: 'AJX', qualifier: 'home' }, { name: 'PSV Eindhoven', abbreviation: 'PSV', qualifier: 'away' }], sport_event_context: { competition: { name: 'Eredivisie', id: 'sr:competition:37' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'EL1', competitionName: 'Eredivisie' },
-      { sport_event: { id: 4, start_time: new Date(now.getTime() + 14400000).toISOString(), competitors: [{ name: 'Flamengo', abbreviation: 'FLA', qualifier: 'home' }, { name: 'Palmeiras', abbreviation: 'PAL', qualifier: 'away' }], sport_event_context: { competition: { name: 'Brasileirão', id: 'sr:competition:325' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'BRA', competitionName: 'Brasileirão' },
+      { sport_event: { id: 'demo:1', start_time: new Date(now.getTime() + 3600000).toISOString(), competitors: [{ name: 'LA Galaxy', abbreviation: 'LAG', qualifier: 'home', id: 'demo:h1' }, { name: 'Seattle Sounders', abbreviation: 'SEA', qualifier: 'away', id: 'demo:a1' }], sport_event_context: { competition: { name: 'MLS', id: 'sr:competition:242' } } }, sport_event_status: { status: 'scheduled' } },
+      { sport_event: { id: 'demo:2', start_time: new Date(now.getTime() + 7200000).toISOString(), competitors: [{ name: 'Orlando City', abbreviation: 'ORL', qualifier: 'home', id: 'demo:h2' }, { name: 'Inter Miami', abbreviation: 'MIA', qualifier: 'away', id: 'demo:a2' }], sport_event_context: { competition: { name: 'MLS', id: 'sr:competition:242' } } }, sport_event_status: { status: 'scheduled' } },
+      { sport_event: { id: 'demo:3', start_time: new Date(now.getTime() + 10800000).toISOString(), competitors: [{ name: 'Ajax', abbreviation: 'AJX', qualifier: 'home', id: 'demo:h3' }, { name: 'PSV Eindhoven', abbreviation: 'PSV', qualifier: 'away', id: 'demo:a3' }], sport_event_context: { competition: { name: 'Eredivisie', id: 'sr:competition:37' } } }, sport_event_status: { status: 'scheduled' } },
+      { sport_event: { id: 'demo:4', start_time: new Date(now.getTime() + 14400000).toISOString(), competitors: [{ name: 'Flamengo', abbreviation: 'FLA', qualifier: 'home', id: 'demo:h4' }, { name: 'Palmeiras', abbreviation: 'PAL', qualifier: 'away', id: 'demo:a4' }], sport_event_context: { competition: { name: 'Brasileirão', id: 'sr:competition:325' } } }, sport_event_status: { status: 'scheduled' } },
     ];
   },
 
   getDemoPremiumGames() {
     const now = new Date();
     return [
-      { sport_event: { id: 101, start_time: new Date(now.getTime() + 1800000).toISOString(), competitors: [{ name: 'Manchester City', abbreviation: 'MCI', qualifier: 'home' }, { name: 'Arsenal', abbreviation: 'ARS', qualifier: 'away' }], sport_event_context: { competition: { name: 'Premier League', id: 'sr:competition:17' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'EPL', competitionName: 'Premier League' },
-      { sport_event: { id: 102, start_time: new Date(now.getTime() + 5400000).toISOString(), competitors: [{ name: 'Real Madrid', abbreviation: 'RM', qualifier: 'home' }, { name: 'Barcelona', abbreviation: 'BAR', qualifier: 'away' }], sport_event_context: { competition: { name: 'La Liga', id: 'sr:competition:8' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'LaLiga', competitionName: 'La Liga' },
-      { sport_event: { id: 103, start_time: new Date(now.getTime() + 9000000).toISOString(), competitors: [{ name: 'Bayern Munich', abbreviation: 'BAY', qualifier: 'home' }, { name: 'Dortmund', abbreviation: 'DOR', qualifier: 'away' }], sport_event_context: { competition: { name: 'Bundesliga', id: 'sr:competition:35' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'Bundesliga', competitionName: 'Bundesliga' },
-      { sport_event: { id: 104, start_time: new Date(now.getTime() + 12600000).toISOString(), competitors: [{ name: 'Inter Milan', abbreviation: 'INT', qualifier: 'home' }, { name: 'AC Milan', abbreviation: 'ACM', qualifier: 'away' }], sport_event_context: { competition: { name: 'Serie A', id: 'sr:competition:23' } } }, sport_event_status: { status: 'scheduled' }, competitionKey: 'SerieA', competitionName: 'Serie A' },
+      { sport_event: { id: 'demo:p1', start_time: new Date(now.getTime() + 1800000).toISOString(), competitors: [{ name: 'Manchester City', abbreviation: 'MCI', qualifier: 'home', id: 'demo:ph1' }, { name: 'Arsenal', abbreviation: 'ARS', qualifier: 'away', id: 'demo:pa1' }], sport_event_context: { competition: { name: 'Premier League', id: 'sr:competition:17' } } }, sport_event_status: { status: 'scheduled' } },
+      { sport_event: { id: 'demo:p2', start_time: new Date(now.getTime() + 5400000).toISOString(), competitors: [{ name: 'Real Madrid', abbreviation: 'RM', qualifier: 'home', id: 'demo:ph2' }, { name: 'Barcelona', abbreviation: 'BAR', qualifier: 'away', id: 'demo:pa2' }], sport_event_context: { competition: { name: 'La Liga', id: 'sr:competition:8' } } }, sport_event_status: { status: 'scheduled' } },
+      { sport_event: { id: 'demo:p3', start_time: new Date(now.getTime() + 9000000).toISOString(), competitors: [{ name: 'Bayern Munich', abbreviation: 'BAY', qualifier: 'home', id: 'demo:ph3' }, { name: 'Dortmund', abbreviation: 'DOR', qualifier: 'away', id: 'demo:pa3' }], sport_event_context: { competition: { name: 'Bundesliga', id: 'sr:competition:35' } } }, sport_event_status: { status: 'scheduled' } },
+      { sport_event: { id: 'demo:p4', start_time: new Date(now.getTime() + 12600000).toISOString(), competitors: [{ name: 'Inter Milan', abbreviation: 'INT', qualifier: 'home', id: 'demo:ph4' }, { name: 'AC Milan', abbreviation: 'ACM', qualifier: 'away', id: 'demo:pa4' }], sport_event_context: { competition: { name: 'Serie A', id: 'sr:competition:23' } } }, sport_event_status: { status: 'scheduled' } },
     ];
   },
 };
 
-export { PREMIUM_COMPETITIONS, FREE_COMPETITIONS };
 export default sportradarApi;

@@ -8,8 +8,9 @@ import useCurrentUser from '../../hooks/useCurrentUser';
 
 const navLinks = [
   { to: '/', label: 'Home' },
+  { to: '/all-odds', label: 'All Leagues' },
   { to: '/free-odds', label: 'Free Odds' },
-  { to: '/premium-odds', label: 'Premium Odds' },
+  { to: '/premium-odds', label: 'Premium' },
   { to: '/sports', label: 'Sports' },
   { to: '/community', label: 'Community' },
   { to: '/blog', label: 'Blog' },

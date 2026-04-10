@@ -19,6 +19,8 @@ import Login from './pages/Login';
 import CmsPage from './pages/CmsPage';
 import FreeOdds from './pages/FreeOdds';
 import PremiumOdds from './pages/PremiumOdds';
+import AllOdds from './pages/AllOdds';
+import MatchDetail from './pages/MatchDetail';
 import SportsCategories from './pages/SportsCategories';
 import MembershipPricing from './pages/MembershipPricing';
 import Blog from './pages/Blog';
@@ -83,6 +85,8 @@ const AuthenticatedApp = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/free-odds" element={<FreeOdds />} />
         <Route path="/premium-odds" element={<PremiumOdds />} />
+        <Route path="/all-odds" element={<AllOdds />} />
+        <Route path="/match/:id" element={<MatchDetail />} />
         <Route path="/sports" element={<SportsCategories />} />
         <Route path="/pricing" element={<MembershipPricing />} />
         <Route path="/blog" element={<Blog />} />
