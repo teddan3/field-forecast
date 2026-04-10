@@ -57,10 +57,10 @@ export const apiFootball = {
     return data.response;
   },
 
-  async fetchFixturesByLeague(leagueId, season = new Date().getFullYear()) {
-    const data = await fetchFromApiFootball(`/fixtures?league=${leagueId}&season=${season}&timezone=America/New_York`);
+  async fetchFixturesByLeague(leagueId, season = 2025) {
+    const data = await fetchFromApiFootball(`/fixtures?date=${this.getDateString()}&timezone=America/New_York`);
     if (!data || !data.response) return [];
-    return data.response;
+    return data.response.filter(f => f.league.id === leagueId);
   },
 
   async fetchOdds(fixtureId) {
