@@ -1,8 +1,7 @@
-const SPORTS_DATA_API_KEY = 'd9ea526938474b6a9189d9fc1d6e17a8';
+const SPORTS_DATA_API_KEY = 'xMRcLHVmioiUNfEgqFPzASu8uyJPvyoWbnhqmNyI';
 const BASE_URL = 'https://api.sportsdata.io/v4/soccer/scores';
 
 const PREMIUM_COMPETITIONS = ['ELITE', 'CL', 'EPL', 'PL', 'LigueA', 'Bundesliga', 'LaLiga', 'SerieA'];
-const FREE_COMPETITIONS = ['MLS', 'EL1', 'EL2', 'EC', 'PPL'];
 
 const PREMIUM_LEAGUES = [
   'UEFA Champions League',
@@ -14,6 +13,24 @@ const PREMIUM_LEAGUES = [
   'UEFA Europa League',
 ];
 
+const FREE_COMPETITIONS = [
+  { key: 'MLS', name: 'MLS' },
+  { key: 'EL1', name: 'Eredivisie' },
+  { key: 'ARG', name: 'Argentine Primera' },
+  { key: 'BRA', name: 'Brasileirão' },
+  { key: 'JPN', name: 'J1 League' },
+  { key: 'MLS', name: 'Canadian Premier League' },
+];
+
+const PREMIUM_COMPETITIONS_DATA = [
+  { key: 'ELITE', name: 'UEFA Champions League' },
+  { key: 'EPL', name: 'Premier League' },
+  { key: 'LaLiga', name: 'La Liga' },
+  { key: 'Bundesliga', name: 'Bundesliga' },
+  { key: 'SerieA', name: 'Serie A' },
+  { key: 'LigueA', name: 'Ligue 1' },
+];
+
 export const sportsApi = {
   async fetchGamesByDate(competition, date) {
     try {
@@ -21,8 +38,12 @@ export const sportsApi = {
       const response = await fetch(url, {
         headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
       });
-      if (!response.ok) throw new Error('API error');
-      return await response.json();
+      if (!response.ok) {
+        console.error('API Error:', response.status, response.statusText);
+        return [];
+      }
+      const data = await response.json();
+      return data || [];
     } catch (error) {
       console.error('Error fetching games:', error);
       return [];
@@ -42,43 +63,40 @@ export const sportsApi = {
     }
   },
 
-  async fetchScoresBasic(competition, date) {
-    try {
-      const response = await fetch(`${BASE_URL}/JSON/ScoresBasic/${competition}/${date}`, {
-        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
-      });
-      if (!response.ok) throw new Error('API error');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching scores:', error);
-      return [];
+  async fetchAllFreeGames(date) {
+    const allGames = [];
+    const freeComps = ['MLS', 'EL1', 'ARG', 'BRA', 'JPN'];
+    
+    for (const comp of freeComps) {
+      try {
+        const games = await this.fetchGamesByDate(comp, date);
+        if (games.length > 0) {
+          allGames.push(...games.map(g => ({ ...g, competitionKey: comp })));
+        }
+      } catch (e) {
+        console.error(`Error fetching ${comp}:`, e);
+      }
     }
+    
+    return allGames;
   },
 
-  async fetchStandings(competition, season) {
-    try {
-      const response = await fetch(`${BASE_URL}/JSON/Standings/${competition}/${season}`, {
-        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
-      });
-      if (!response.ok) throw new Error('API error');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching standings:', error);
-      return [];
+  async fetchAllPremiumGames(date) {
+    const allGames = [];
+    const premComps = ['ELITE', 'EPL', 'LaLiga', 'Bundesliga', 'SerieA', 'LigueA'];
+    
+    for (const comp of premComps) {
+      try {
+        const games = await this.fetchGamesByDate(comp, date);
+        if (games.length > 0) {
+          allGames.push(...games.map(g => ({ ...g, competitionKey: comp })));
+        }
+      } catch (e) {
+        console.error(`Error fetching ${comp}:`, e);
+      }
     }
-  },
-
-  async fetchTeams(competition) {
-    try {
-      const response = await fetch(`${BASE_URL}/JSON/Teams/${competition}`, {
-        headers: { 'Ocp-Apim-Subscription-Key': SPORTS_DATA_API_KEY }
-      });
-      if (!response.ok) throw new Error('API error');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-      return [];
-    }
+    
+    return allGames;
   },
 
   isPremiumCompetition(competitionKey) {
@@ -92,59 +110,49 @@ export const sportsApi = {
   },
 
   getPremiumCompetitions() {
-    return PREMIUM_COMPETITIONS;
+    return PREMIUM_COMPETITIONS_DATA;
   },
 
   getFreeCompetitions() {
     return FREE_COMPETITIONS;
   },
 
-  formatGameData(games) {
-    if (!Array.isArray(games)) return [];
-    return games.map(game => ({
-      gameId: game.GameId,
-      date: game.DateTime || game.Date,
+  formatGameData(game) {
+    return {
+      gameId: game.GameId || game.gameId,
+      date: game.DateTime || game.Date || game.date,
       datetime: game.DateTimeUTC,
-      status: game.Status,
-      homeTeam: game.HomeTeamName || game.HomeTeam,
-      awayTeam: game.AwayTeamName || game.AwayTeam,
+      status: game.Status || 'Scheduled',
+      homeTeam: game.HomeTeamName || game.HomeTeam || game.homeTeam,
+      awayTeam: game.AwayTeamName || game.AwayTeam || game.awayTeam,
       homeScore: game.HomeTeamScore,
       awayScore: game.AwayTeamScore,
-      competition: game.Competition || game.League,
+      competition: game.Competition || game.League || game.competition,
       competitionId: game.CompetitionId,
       season: game.Season,
       week: game.Week,
       venue: game.Venue,
-      homeRotationNumber: game.HomeRotationNumber,
-      awayRotationNumber: game.AwayRotationNumber,
       period: game.Period,
       clock: game.Clock,
-      awayTeamScore2H: game.AwayTeamScoreSecondHalf,
-      homeTeamScore2H: game.HomeTeamScoreSecondHalf,
       isPremium: this.isPremiumCompetition(game.Competition),
-    }));
+    };
   },
 
-  calculatePrediction(game) {
-    if (!game.homeTeam || !game.awayTeam) return { prediction: null, confidence: 0 };
-    
-    const homeAdvantage = game.homeScore !== null ? 35 : 30;
-    const randomFactor = Math.random() * 20;
-    const homeWinProb = homeAdvantage + randomFactor;
-    const awayWinProb = 25 + (Math.random() * 15);
-    const drawProb = 100 - homeWinProb - awayWinProb;
+  calculatePrediction() {
+    const homeProb = 35 + Math.random() * 20;
+    const awayProb = 25 + Math.random() * 15;
+    const drawProb = 100 - homeProb - awayProb;
 
     let prediction = 'draw';
-    if (homeWinProb > awayWinProb && homeWinProb > drawProb) prediction = 'home';
-    else if (awayWinProb > homeWinProb && awayWinProb > drawProb) prediction = 'away';
+    if (homeProb > awayProb && homeProb > drawProb) prediction = 'home';
+    else if (awayProb > homeProb && awayProb > drawProb) prediction = 'away';
 
-    const confidence = Math.round(Math.max(homeWinProb, awayWinProb, drawProb));
-
+    const confidence = Math.round(Math.max(homeProb, awayProb, drawProb));
     return { prediction, confidence };
   },
 
   generateOdds(game) {
-    const { prediction, confidence } = this.calculatePrediction(game);
+    const { prediction, confidence } = this.calculatePrediction();
     
     const homeOdds = (1.8 + Math.random() * 1.2).toFixed(2);
     const drawOdds = (3.0 + Math.random() * 1.0).toFixed(2);
@@ -161,6 +169,7 @@ export const sportsApi = {
   },
 
   formatDate(dateStr) {
+    if (!dateStr) return 'TBD';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -176,8 +185,29 @@ export const sportsApi = {
     date.setDate(date.getDate() + daysFromNow);
     return date.toISOString().split('T')[0];
   },
+
+  getDemoFreeGames() {
+    return [
+      { gameId: 1, homeTeam: 'LA Galaxy', awayTeam: 'Seattle Sounders', competition: 'MLS', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 2, homeTeam: 'Orlando City', awayTeam: 'Inter Miami', competition: 'MLS', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 3, homeTeam: 'Ajax', awayTeam: 'PSV Eindhoven', competition: 'Eredivisie', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 4, homeTeam: 'Porto', awayTeam: 'Benfica', competition: 'Primeira Liga', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 5, homeTeam: 'Flamengo', awayTeam: 'Palmeiras', competition: 'Brasileirão', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 6, homeTeam: 'Yokohama F. Marinos', awayTeam: 'Kawasaki Frontale', competition: 'J1 League', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+    ];
+  },
+
+  getDemoPremiumGames() {
+    return [
+      { gameId: 101, homeTeam: 'Real Madrid', awayTeam: 'Bayern Munich', competition: 'UEFA Champions League', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 102, homeTeam: 'Manchester City', awayTeam: 'Arsenal', competition: 'Premier League', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 103, homeTeam: 'Barcelona', awayTeam: 'Atlético Madrid', competition: 'La Liga', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 104, homeTeam: 'Bayern Munich', awayTeam: 'Dortmund', competition: 'Bundesliga', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 105, homeTeam: 'Inter Milan', awayTeam: 'AC Milan', competition: 'Serie A', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+      { gameId: 106, homeTeam: 'PSG', awayTeam: 'Marseille', competition: 'Ligue 1', DateTime: new Date().toISOString(), Status: 'Scheduled' },
+    ];
+  },
 };
 
-export const PREMIUM_LEAGUES = PREMIUM_LEAGUES;
-export { PREMIUM_COMPETITIONS, FREE_COMPETITIONS };
+export { PREMIUM_LEAGUES, PREMIUM_COMPETITIONS };
 export default sportsApi;
