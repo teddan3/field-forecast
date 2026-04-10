@@ -20,8 +20,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src="/logo.png" alt="Field Forecast Logo" className="h-10 w-auto" onError={(e) => { e.target.style.display = 'none'; }} />
+            <Link to="/" className="flex items-center gap-3 mb-4">
+              <img src="/logo.png" alt="Field Forecast Logo" className="h-14 w-auto max-w-[200px] object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
               <span className="font-heading text-lg font-bold">Field Forecast</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">

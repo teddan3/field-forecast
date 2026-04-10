@@ -31,9 +31,9 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Field Forecast Logo" className="h-10 w-auto" onError={(e) => { e.target.style.display = 'none'; }} />
-            <span className="font-heading text-lg font-bold tracking-tight">Field Forecast</span>
+          <Link to="/" className="flex items-center gap-3">
+            <img src="/logo.png" alt="Field Forecast Logo" className="h-12 w-auto max-w-[180px] object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} style={{display: 'none'}} />
+            <span className="font-heading text-xl font-bold tracking-tight hidden">Field Forecast</span>
           </Link>
 
           {/* Desktop Nav */}
