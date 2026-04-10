@@ -34,6 +34,9 @@ async function fetchFromApiFootball(endpoint) {
     if (data.errors && Object.keys(data.errors).length > 0) {
       console.error('API-Football Errors:', data.errors);
     }
+    if (data.results === 0) {
+      console.log('API-Football: No results found');
+    }
     return data;
   } catch (error) {
     console.error('Error fetching from API-Football:', error);
@@ -270,6 +273,98 @@ export const apiFootball = {
     const date = new Date();
     date.setDate(date.getDate() + daysFromNow);
     return date.toISOString().split('T')[0];
+  },
+
+  getDemoFixtures() {
+    const now = new Date();
+    return [
+      {
+        fixture: {
+          id: 'demo-1',
+          date: new Date(now.getTime() + 3600000).toISOString(),
+          status: { long: 'Not Started', short: 'NS', elapsed: null },
+          venue: { name: 'Anfield', city: 'Liverpool' },
+          referee: null,
+        },
+        league: { id: 39, name: 'Premier League', country: 'England', logo: 'https://media.api-sports.io/football/leagues/39.png', season: 2025, round: 'Matchday 32' },
+        teams: { home: { id: 40, name: 'Liverpool', logo: 'https://media.api-sports.io/football/teams/40.png', winner: null }, away: { id: 42, name: 'Arsenal', logo: 'https://media.api-sports.io/football/teams/42.png', winner: null } },
+        goals: { home: null, away: null },
+        score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
+      },
+      {
+        fixture: {
+          id: 'demo-2',
+          date: new Date(now.getTime() + 7200000).toISOString(),
+          status: { long: 'First Half', short: '1H', elapsed: 25, extra: null },
+          venue: { name: 'Santiago Bernabéu', city: 'Madrid' },
+          referee: null,
+        },
+        league: { id: 140, name: 'La Liga', country: 'Spain', logo: 'https://media.api-sports.io/football/leagues/140.png', season: 2025, round: 'Matchday 30' },
+        teams: { home: { id: 541, name: 'Real Madrid', logo: 'https://media.api-sports.io/football/teams/541.png', winner: null }, away: { id: 529, name: 'Barcelona', logo: 'https://media.api-sports.io/football/teams/529.png', winner: null } },
+        goals: { home: 1, away: 1 },
+        score: { halftime: { home: 1, away: 0 }, fulltime: { home: null, away: null } },
+      },
+      {
+        fixture: {
+          id: 'demo-3',
+          date: new Date(now.getTime() + 10800000).toISOString(),
+          status: { long: 'Match Finished', short: 'FT', elapsed: 90, extra: null },
+          venue: { name: 'Allianz Arena', city: 'Munich' },
+          referee: null,
+        },
+        league: { id: 78, name: 'Bundesliga', country: 'Germany', logo: 'https://media.api-sports.io/football/leagues/78.png', season: 2025, round: 'Matchday 28' },
+        teams: { home: { id: 157, name: 'Bayern Munich', logo: 'https://media.api-sports.io/football/teams/157.png', winner: true }, away: { id: 165, name: 'Borussia Dortmund', logo: 'https://media.api-sports.io/football/teams/165.png', winner: false } },
+        goals: { home: 3, away: 1 },
+        score: { halftime: { home: 1, away: 1 }, fulltime: { home: 3, away: 1 } },
+      },
+      {
+        fixture: {
+          id: 'demo-4',
+          date: new Date(now.getTime() + 14400000).toISOString(),
+          status: { long: 'Not Started', short: 'NS', elapsed: null },
+          venue: { name: 'San Siro', city: 'Milan' },
+          referee: null,
+        },
+        league: { id: 135, name: 'Serie A', country: 'Italy', logo: 'https://media.api-sports.io/football/leagues/135.png', season: 2025, round: 'Matchday 32' },
+        teams: { home: { id: 505, name: 'Inter Milan', logo: 'https://media.api-sports.io/football/teams/505.png', winner: null }, away: { id: 487, name: 'AC Milan', logo: 'https://media.api-sports.io/football/teams/487.png', winner: null } },
+        goals: { home: null, away: null },
+        score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
+      },
+      {
+        fixture: {
+          id: 'demo-5',
+          date: new Date(now.getTime() + 18000000).toISOString(),
+          status: { long: 'Match Finished', short: 'FT', elapsed: 90, extra: null },
+          venue: { name: 'Rose Bowl', city: 'Los Angeles' },
+          referee: null,
+        },
+        league: { id: 253, name: 'MLS', country: 'USA', logo: 'https://media.api-sports.io/football/leagues/253.png', season: 2026, round: 'Regular Season' },
+        teams: { home: { id: 4344, name: 'LA Galaxy', logo: 'https://media.api-sports.io/football/teams/4344.png', winner: true }, away: { id: 4350, name: 'Seattle Sounders', logo: 'https://media.api-sports.io/football/teams/4350.png', winner: false } },
+        goals: { home: 2, away: 0 },
+        score: { halftime: { home: 1, away: 0 }, fulltime: { home: 2, away: 0 } },
+      },
+    ];
+  },
+
+  getDemoOdds() {
+    return {
+      home: 1.85,
+      draw: 3.50,
+      away: 4.20,
+      homeProb: 51,
+      drawProb: 27,
+      awayProb: 22,
+      prediction: 'home',
+      confidence: 51,
+      sportsbookOdds: [
+        { sportsbook: 'Bet365', home: 1.85, draw: 3.60, away: 4.00 },
+        { sportsbook: 'Betfair', home: 1.83, draw: 3.50, away: 4.20 },
+        { sportsbook: 'William Hill', home: 1.88, draw: 3.40, away: 4.25 },
+        { sportsbook: 'Unibet', home: 1.85, draw: 3.55, away: 4.10 },
+        { sportsbook: 'Pinnacle', home: 1.86, draw: 3.58, away: 4.18 },
+      ],
+      lastUpdate: new Date().toISOString(),
+    };
   },
 };
 

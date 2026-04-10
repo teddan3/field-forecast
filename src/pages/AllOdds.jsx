@@ -21,6 +21,8 @@ export default function AllOdds() {
   const [search, setSearch] = useState('');
   const [selectedLeague, setSelectedLeague] = useState(null);
   const [leagueDropdownOpen, setLeagueDropdownOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const [usingDemoData, setUsingDemoData] = useState(false);
   const { isPremium, isVip } = useCurrentUser();
 
   const allLeagues = [...PREMIUM_LEAGUES, ...FREE_LEAGUES];
@@ -31,6 +33,9 @@ export default function AllOdds() {
 
   const loadFixtures = async () => {
     setLoading(true);
+    setError(null);
+    setUsingDemoData(false);
+    
     try {
       let rawFixtures = [];
       
@@ -42,11 +47,23 @@ export default function AllOdds() {
         rawFixtures = await apiFootball.fetchTodayFixtures();
       }
 
-      const formatted = rawFixtures.map(f => apiFootball.formatFixture(f));
-      setFixtures(formatted);
+      if (rawFixtures.length > 0) {
+        const formatted = rawFixtures.map(f => apiFootball.formatFixture(f));
+        setFixtures(formatted);
+      } else {
+        console.log('No fixtures from API, using demo data');
+        const demoFixtures = apiFootball.getDemoFixtures();
+        const formatted = demoFixtures.map(f => apiFootball.formatFixture(f));
+        setFixtures(formatted);
+        setUsingDemoData(true);
+      }
     } catch (error) {
       console.error('Error loading fixtures:', error);
-      setFixtures([]);
+      setError(error.message || 'Failed to load fixtures');
+      const demoFixtures = apiFootball.getDemoFixtures();
+      const formatted = demoFixtures.map(f => apiFootball.formatFixture(f));
+      setFixtures(formatted);
+      setUsingDemoData(true);
     }
     setLoading(false);
   };
@@ -192,6 +209,26 @@ export default function AllOdds() {
           <button onClick={() => setSelectedLeague(null)} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </button>
+        </div>
+      )}
+
+      {usingDemoData && (
+        <div className="mb-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex items-center gap-3">
+          <Trophy className="w-5 h-5 text-yellow-600" />
+          <div>
+            <p className="font-medium text-yellow-600">Demo Mode</p>
+            <p className="text-sm text-muted-foreground">Showing sample data. Live API will work when deployed.</p>
+          </div>
+        </div>
+      )}
+
+      {error && !usingDemoData && (
+        <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3">
+          <Trophy className="w-5 h-5 text-red-600" />
+          <div>
+            <p className="font-medium text-red-600">Connection Error</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
         </div>
       )}
 
