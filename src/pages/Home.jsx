@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Crown, TrendingUp, Shield, Users, Star, Zap, Trophy, BookOpen, Calendar } from 'lucide-react';
+import { ArrowRight, Crown, TrendingUp, Shield, Users, Star, Zap, Trophy, BookOpen, Calendar, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import localDb from '@/lib/localDb';
-import sportsApi from '@/lib/sportsApi';
+import sportradarApi from '@/lib/sportradarApi';
 
 const iconMap = { TrendingUp, Shield, Crown, Zap, Users, Star };
 
@@ -27,18 +27,17 @@ export default function Home() {
   const loadFreeGames = async () => {
     setLoading(true);
     try {
-      const date = sportsApi.getDateString();
-      const games = await sportsApi.fetchAllFreeGames(date);
+      const games = await sportradarApi.fetchAllFreeGames();
       
       if (games.length > 0) {
-        const formatted = games.slice(0, 6).map(g => sportsApi.formatGameData(g));
+        const formatted = games.slice(0, 6).map(g => sportradarApi.formatGameData(g));
         setFreeGames(formatted);
       } else {
-        setFreeGames(sportsApi.getDemoFreeGames().map(g => sportsApi.formatGameData(g)));
+        setFreeGames(sportradarApi.getDemoFreeGames().map(g => sportradarApi.formatGameData(g)));
       }
     } catch (error) {
       console.error('Error loading free games:', error);
-      setFreeGames(sportsApi.getDemoFreeGames().map(g => sportsApi.formatGameData(g)));
+      setFreeGames(sportradarApi.getDemoFreeGames().map(g => sportradarApi.formatGameData(g)));
     }
     setLoading(false);
   };
@@ -232,7 +231,7 @@ export default function Home() {
                 </h2>
               </div>
               <p className="text-muted-foreground max-w-xl mx-auto mb-6">
-                {freeOddsSection?.subtitle || 'Real-time predictions from today's matches across major leagues'}
+                {freeOddsSection?.subtitle || "Real-time predictions from today's matches across major leagues"}
               </p>
               <Link to={freeOddsSection?.cta_link || '/free-odds'}>
                 <Button size="lg" className="gap-2">
@@ -251,9 +250,9 @@ export default function Home() {
                 </>
               ) : freeGames.length > 0 ? (
                 freeGames.slice(0, 6).map((game) => {
-                  const odds = sportsApi.generateOdds(game);
+                  const odds = sportradarApi.generateOdds(game);
                   return (
-                    <div key={game.gameId} className="bg-background rounded-xl border border-border p-5 hover:border-primary/20 transition-colors">
+                    <div key={game.id} className="bg-background rounded-xl border border-border p-5 hover:border-primary/20 transition-colors">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">
@@ -261,11 +260,12 @@ export default function Home() {
                           </span>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {sportsApi.formatDate(game.date || game.datetime)}
+                            {sportradarApi.formatDate(game.datetime)}
                           </span>
                         </div>
-                        {game.status === 'InProgress' && (
-                          <span className="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded">
+                        {game.isLive && (
+                          <span className="flex items-center gap-1 text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded">
+                            <Radio className="w-3 h-3 animate-pulse" />
                             LIVE
                           </span>
                         )}
@@ -278,7 +278,7 @@ export default function Home() {
                         </div>
                         
                         <div className="px-6 text-center">
-                          {game.homeScore !== null ? (
+                          {game.homeScore !== null && game.homeScore !== undefined ? (
                             <div className="text-2xl font-bold">
                               {game.homeScore} - {game.awayScore}
                             </div>
@@ -296,23 +296,23 @@ export default function Home() {
                       <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
                         <div className="flex gap-2">
                           <span className="text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded">
-                            Home: {odds.home}
+                            1: {odds.home}
                           </span>
                           <span className="text-xs bg-yellow-500/10 text-yellow-600 px-2 py-1 rounded">
-                            Draw: {odds.draw}
+                            X: {odds.draw}
                           </span>
                           <span className="text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded">
-                            Away: {odds.away}
+                            2: {odds.away}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{odds.confidence}% confidence</span>
+                          <span className="text-xs text-muted-foreground">{odds.confidence}% conf</span>
                           <span className={`text-xs font-medium px-2 py-1 rounded ${
                             odds.prediction === 'home' ? 'bg-green-500/10 text-green-600' :
                             odds.prediction === 'away' ? 'bg-blue-500/10 text-blue-600' :
                             'bg-yellow-500/10 text-yellow-600'
                           }`}>
-                            {odds.prediction === 'home' ? 'Home Win' : odds.prediction === 'away' ? 'Away Win' : 'Draw'}
+                            {odds.prediction === 'home' ? '1' : odds.prediction === 'away' ? '2' : 'X'}
                           </span>
                         </div>
                       </div>
