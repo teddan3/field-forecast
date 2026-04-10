@@ -253,22 +253,22 @@ export const localDb = {
         { id: 'page_pricing', title: 'Pricing', slug: 'pricing', route: '/pricing', page_type: 'pricing', status: 'active' },
         { id: 'page_blog', title: 'Blog', slug: 'blog', route: '/blog', page_type: 'blog', status: 'active' },
         { id: 'page_contact', title: 'Contact', slug: 'contact', route: '/contact', page_type: 'contact', status: 'active' },
-        { id: 'page_about', title: 'About Us', slug: 'about', route: '/page/about', page_type: 'default', status: 'active', meta_title: 'About Field Forecast', meta_description: 'Learn about our expert team', content: '<h1>About Us</h1><p>We are a team of sports analysts...</p>' },
+        { id: 'page_about', title: 'About Us', slug: 'about', route: '/page/about', page_type: 'default', status: 'active', meta_title: 'About Field Forecast', meta_description: 'Empowering sports fans with accurate data and insightful predictions', content: '<h2>Who We Are</h2><p>Field Forecast is your trusted source for sports data and predictions. We empower sports fans, analysts, and professionals with accurate, real-time sports information.</p><h3>Our Mission</h3><p>At Field Forecast, our mission is to empower sports fans, analysts, and professionals with accurate, real-time sports data and insightful predictions. We deliver comprehensive coverage across multiple sports to help you make smarter decisions and stay connected to the game.</p><h3>What We Offer</h3><p>We provide instant scores, detailed match statistics, historical records, team and player information, and data-driven predictions for sports including football, baseball, basketball, handball, hockey, rugby, and volleyball. Our platform combines trusted data sources with advanced analytics to bring you meaningful insights in a user-friendly format.</p><h3>Sports News</h3><p>Beyond scores and stats, Field Forecast keeps you informed with the latest sports news, updates, and expert analyses. Our dedicated news section covers breaking stories, player transfers, match previews, and in-depth features to ensure you never miss a moment in the world of sports.</p><h3>Our Vision</h3><p>We aspire to be a leading global hub for sports data by continuously enhancing our platform, expanding our sports coverage, and introducing innovative features that meet the evolving needs of the sports community worldwide.</p><h3>Our Commitment</h3><p>Transparency, reliability, and user trust are at the core of everything we do. We are dedicated to maintaining a stable and secure platform that supports informed sports fandom and professional analysis alike.</p><h3>Join Our Community</h3><p>Thank you for choosing Field Forecast as your trusted source for sports information. Together, we stay ahead of the game.</p>' },
       ]);
       
       setStorage('sections', [
         // Home page sections
         { id: 'sec_home_1', page: 'home', name: 'hero', section_type: 'hero', title: 'Data-Driven Odds Intelligence', subtitle: 'Access professional-grade sports analysis and odds intelligence. Trusted by analysts who demand precision.', cta_primary_text: 'View Free Odds', cta_primary_link: '/free-odds', cta_secondary_text: 'Go Premium', cta_secondary_link: '/pricing', badge_text: 'Field Forecast Odds Prediction System', image: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?w=1600', status: 'active', order: 1 },
-        { id: 'sec_home_2', page: 'home', name: 'stats', section_type: 'stats', stats: JSON.stringify([{ label: 'Matches Daily', value: '200+' }, { label: 'Success Rate', value: '78%' }, { label: 'Active Members', value: '12K+' }, { label: 'Sports Covered', value: '15+' }]), status: 'active', order: 2 },
-        { id: 'sec_home_3', page: 'home', name: 'features', section_type: 'features', title: 'Why Choose Field Forecast?', subtitle: 'Professional-grade intelligence for serious analysts', features: JSON.stringify([
-          { icon: 'TrendingUp', title: 'Precision Analytics', desc: 'Algorithmic odds analysis with 78%+ historical accuracy across all major leagues.' },
-          { icon: 'Shield', title: 'Verified Data', desc: 'Every prediction is backed by statistical models and expert verification.' },
-          { icon: 'Crown', title: 'VIP Intelligence', desc: 'Exclusive high-confidence picks and advanced insights for our VIP members.' },
-          { icon: 'Zap', title: 'Real-Time Updates', desc: 'Live odds and instant notifications when key predictions are published.' },
-          { icon: 'Users', title: 'Expert Community', desc: 'Join 12,000+ analysts who rely on Field Forecast for their sports intelligence.' },
-          { icon: 'Star', title: 'Multi-Sport Coverage', desc: 'Football, basketball, tennis, and 15+ sports with deep market analysis.' }
+        { id: 'sec_home_2', page: 'home', name: 'stats', section_type: 'stats', stats: JSON.stringify([{ label: 'Sports Covered', value: '7+' }, { label: 'Leagues Worldwide', value: '50+' }, { label: 'Active Users', value: '10K+' }, { label: 'Predictions Daily', value: '500+' }]), status: 'active', order: 2 },
+        { id: 'sec_home_3', page: 'home', name: 'features', section_type: 'features', title: 'Why Choose Field Forecast?', subtitle: 'Your trusted source for sports data and predictions', features: JSON.stringify([
+          { icon: 'TrendingUp', title: 'Real-Time Scores', desc: 'Instant live scores and match updates across all major sports leagues worldwide.' },
+          { icon: 'Shield', title: 'Accurate Predictions', desc: 'Data-driven predictions powered by advanced analytics and expert analysis.' },
+          { icon: 'Star', title: 'Comprehensive Coverage', desc: 'Football, baseball, basketball, handball, hockey, rugby, and volleyball coverage.' },
+          { icon: 'Zap', title: 'Instant Updates', desc: 'Get notified immediately when scores change or new predictions are available.' },
+          { icon: 'Users', title: 'Expert Analysis', desc: 'In-depth match previews, player stats, and expert insights on every game.' },
+          { icon: 'Newspaper', title: 'Sports News', desc: 'Breaking stories, transfer news, and in-depth features from the sports world.' }
         ]), status: 'active', order: 3 },
-        { id: 'sec_home_4', page: 'home', name: 'about', section_type: 'content', title: 'About Field Forecast', subtitle: 'Your trusted sports intelligence platform', content: '<p>Field Forecast is your premier destination for data-driven sports analysis and betting intelligence. Our team of expert analysts combines advanced statistical models with years of sports betting experience to deliver accurate predictions.</p><p>We cover over 15 sports leagues worldwide, providing daily odds analysis and premium predictions for our members.</p>', status: 'active', order: 4 },
+        { id: 'sec_home_4', page: 'home', name: 'about', section_type: 'content', title: 'About Field Forecast', subtitle: 'Empowering sports fans with accurate data and insightful predictions', content: '<h3>Our Mission</h3><p>At Field Forecast, our mission is to empower sports fans, analysts, and professionals with accurate, real-time sports data and insightful predictions. We deliver comprehensive coverage across multiple sports to help you make smarter decisions and stay connected to the game.</p><h3>What We Offer</h3><p>We provide instant scores, detailed match statistics, historical records, team and player information, and data-driven predictions for sports including football, baseball, basketball, handball, hockey, rugby, and volleyball. Our platform combines trusted data sources with advanced analytics to bring you meaningful insights in a user-friendly format.</p><h3>Our Vision</h3><p>We aspire to be a leading global hub for sports data by continuously enhancing our platform, expanding our sports coverage, and introducing innovative features that meet the evolving needs of the sports community worldwide.</p><h3>Our Commitment</h3><p>Transparency, reliability, and user trust are at the core of everything we do. We are dedicated to maintaining a stable and secure platform that supports informed sports fandom and professional analysis alike.</p>', status: 'active', order: 4 },
         { id: 'sec_home_5', page: 'home', name: 'free_odds_preview', section_type: 'content', title: 'Today\'s Free Predictions', subtitle: 'Get started with our daily free odds', content: '<p>Check out our free daily predictions for today\'s top matches across all major leagues.</p>', cta_text: 'View All Free Odds', cta_link: '/free-odds', status: 'active', order: 5 },
         { id: 'sec_home_6', page: 'home', name: 'cta', section_type: 'cta', title: 'Unlock the Full Intelligence Suite', subtitle: 'Get access to all premium odds, advanced analysis, and VIP predictions.', cta_text: 'View Membership Plans', cta_link: '/pricing', status: 'active', order: 6 },
         
@@ -280,13 +280,15 @@ export const localDb = {
         
         // Sports page sections
         { id: 'sec_sports_1', page: 'sports', name: 'page_header', section_type: 'header', title: 'Sports Categories', subtitle: 'Browse predictions by sport. We cover major leagues worldwide.', status: 'active', order: 1 },
-        { id: 'sec_sports_2', page: 'sports', name: 'sports_grid', section_type: 'grid', title: 'Featured Sports', subtitle: 'Our most popular sports for predictions', grid_items: JSON.stringify([
-          { name: 'Football', icon: '⚽', count: '500+', color: '#22c55e' },
-          { name: 'Basketball', icon: '🏀', count: '300+', color: '#f97316' },
-          { name: 'Tennis', icon: '🎾', count: '200+', color: '#06b6d4' },
-          { name: 'Baseball', icon: '⚾', count: '150+', color: '#ef4444' },
-          { name: 'Hockey', icon: '🏒', count: '100+', color: '#3b82f6' },
-          { name: 'Soccer', icon: '⚽', count: '400+', color: '#22c55e' }
+        { id: 'sec_sports_2', page: 'sports', name: 'sports_grid', section_type: 'grid', title: 'Sports We Cover', subtitle: 'Comprehensive coverage across major sports worldwide', grid_items: JSON.stringify([
+          { name: 'Football', icon: '⚽', count: 'Premier League, La Liga, Serie A', color: '#22c55e' },
+          { name: 'Basketball', icon: '🏀', count: 'NBA, EuroLeague', color: '#f97316' },
+          { name: 'Baseball', icon: '⚾', count: 'MLB, KBO', color: '#ef4444' },
+          { name: 'Hockey', icon: '🏒', count: 'NHL', color: '#3b82f6' },
+          { name: 'Handball', icon: '🤾', count: 'EHF Champions League', color: '#8b5cf6' },
+          { name: 'Rugby', icon: '🏉', count: '6 Nations, Rugby World Cup', color: '#ec4899' },
+          { name: 'Volleyball', icon: '🏐', count: 'World League, Champions League', color: '#f59e0b' },
+          { name: 'Tennis', icon: '🎾', count: 'ATP, WTA, Grand Slams', color: '#06b6d4' }
         ]), status: 'active', order: 2 },
         
         // Pricing page sections

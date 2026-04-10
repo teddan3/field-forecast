@@ -32,9 +32,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Shield className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <img src="/logo.png" alt="Field Forecast Logo" className="h-10 w-auto" onError={(e) => { e.target.style.display = 'none'; }} />
             <span className="font-heading text-lg font-bold tracking-tight">Field Forecast</span>
           </Link>
 
