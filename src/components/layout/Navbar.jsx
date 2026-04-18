@@ -11,8 +11,7 @@ const navLinks = [
   { to: '/all-odds', label: 'All Leagues' },
   { to: '/free-odds', label: 'Free Odds' },
   { to: '/premium-odds', label: 'Premium' },
-  { to: '/sports', label: 'Sports' },
-  { to: '/community', label: 'Community' },
+  { to: '/faq', label: 'FAQ' },
   { to: '/blog', label: 'Blog' },
   { to: '/contact', label: 'Contact' },
 ];

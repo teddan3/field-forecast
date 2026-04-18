@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import Floating18Plus from '../Floating18Plus';
 
 export default function PublicLayout() {
   return (
@@ -10,6 +11,7 @@ export default function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <Floating18Plus />
     </div>
   );
 }

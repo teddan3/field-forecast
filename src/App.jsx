@@ -27,6 +27,8 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Contact from './pages/Contact';
 import Community from './pages/Community';
+import FAQ from './pages/FAQ';
+import Page18Plus from './pages/Page18Plus';
 
 // Admin pages
 import Dashboard from './pages/admin/Dashboard';
@@ -93,6 +95,8 @@ const AuthenticatedApp = () => {
         <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/page/18plus" element={<Page18Plus />} />
         <Route path="/page/:slug" element={<CmsPage />} />
       </Route>
 
