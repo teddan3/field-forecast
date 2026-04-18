@@ -38,7 +38,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="public/field_logo.jpeg"
+              src="/field_logo.jpeg"
               alt="Field Forecast Logo"
               className="h-10 w-auto max-w-[160px] object-contain"
               onError={(e) => { e.target.style.display = 'none'; }}
