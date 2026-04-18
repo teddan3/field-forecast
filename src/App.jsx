@@ -16,6 +16,7 @@ import AdminLayout from './components/layout/AdminLayout';
 // Public pages
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import CmsPage from './pages/CmsPage';
 import FreeOdds from './pages/FreeOdds';
 import PremiumOdds from './pages/PremiumOdds';
@@ -29,6 +30,8 @@ import Contact from './pages/Contact';
 import Community from './pages/Community';
 import FAQ from './pages/FAQ';
 import Page18Plus from './pages/Page18Plus';
+import UserDashboard from './pages/Dashboard';
+import AdminDashboard from './pages/admin/Dashboard';
 
 // Admin pages
 import Dashboard from './pages/admin/Dashboard';
@@ -85,6 +88,8 @@ const AuthenticatedApp = () => {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/free-odds" element={<FreeOdds />} />
         <Route path="/premium-odds" element={<PremiumOdds />} />
         <Route path="/all-odds" element={<AllOdds />} />
@@ -102,7 +107,7 @@ const AuthenticatedApp = () => {
 
       {/* Admin routes */}
       <Route element={<AdminLayout />}>
-        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/pagebuilder" element={<AdminPageBuilder />} />
         <Route path="/admin/odds" element={<AdminOdds />} />
         <Route path="/admin/matches" element={<AdminMatches />} />

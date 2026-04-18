@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Shield } from 'lucide-react';
 import localDb from '@/lib/localDb';
 import { useEffect, useState } from 'react';
 
@@ -22,10 +21,10 @@ export default function Footer() {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4">
               <img 
-                src="/logo.png" 
+                src="public/field_logo.jpeg"
                 alt="Field Forecast Logo" 
-                className="h-12 w-auto max-w-[160px] object-contain" 
-                onError={(e) => { e.target.style.display = 'none'; }} 
+                className="h-12 w-auto max-w-[160px] object-contain"
+                onError={(e) => { e.target.style.display = 'none'; }}
               />
               <span className="font-heading text-lg font-bold">Field Forecast</span>
             </Link>

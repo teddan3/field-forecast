@@ -4,16 +4,49 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\SportsApiService;
+use App\Services\PredictionService;
+use App\Services\MatchValidationService;
+use App\Models\Match;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class OddsController extends Controller
 {
     public function __construct(
-        private SportsApiService $sportsApi
+        private SportsApiService $sportsApi,
+        private PredictionService $prediction,
+        private MatchValidationService $validation
     ) {}
 
     public function show(int $fixtureId): JsonResponse
     {
+        $match = Match::where('api_id', $fixtureId)
+            ->with(['homeTeam', 'awayTeam'])
+            ->first();
+
+        if (!$match) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Match not found',
+            ], 404);
+        }
+
+        if (!$this->validation->isValidUpcomingMatch($match)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This match is no longer valid for predictions',
+                'match_status' => $match->status,
+            ], 400);
+        }
+
+        if (!$match->is_upcoming && !$match->is_live) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This match has already finished',
+                'match_status' => $match->status,
+            ], 400);
+        }
+
         $oddsData = $this->sportsApi->fetchOdds($fixtureId);
 
         if (!$oddsData) {
@@ -25,11 +58,80 @@ class OddsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $this->formatOdds($oddsData),
+            'data' => $this->formatOdds($oddsData, $match),
         ]);
     }
 
-    protected function formatOdds(array $oddsData): array
+    public function upcoming(Request $request): JsonResponse
+    {
+        $type = $request->get('type', 'all');
+        $limit = min($request->get('limit', 50), 100);
+        $leagueId = $request->get('league');
+
+        $matches = match ($type) {
+            'live' => $this->prediction->getLivePredictions($limit),
+            'premium' => $this->prediction->getPremiumPredictions(
+                $request->user()?->id ?? 0,
+                $limit
+            ),
+            'free' => $this->prediction->getFreePredictions($limit),
+            default => $this->prediction->getUpcomingPredictions(
+                $request->user()?->id ?? 0,
+                $limit
+            ),
+        };
+
+        if ($leagueId) {
+            $matches = $this->prediction->getPredictionsByLeague($leagueId, $limit);
+        }
+
+        if (empty($matches)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No predictions available at the moment',
+                'data' => [],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $matches,
+            'summary' => $this->prediction->getMatchSummary(),
+        ]);
+    }
+
+    public function validateMatch(Request $request): JsonResponse
+    {
+        $request->validate([
+            'match_id' => 'required|integer',
+        ]);
+
+        $match = Match::findOrFail($request->match_id);
+
+        $isValid = $this->validation->isValidUpcomingMatch($match);
+        $status = $this->validation->getMatchStatus($match);
+        $canPredict = $this->validation->isMatchValidForPrediction($match);
+
+        return response()->json([
+            'success' => true,
+            'match' => [
+                'id' => $match->id,
+                'api_id' => $match->api_id,
+                'status' => $match->status,
+                'is_valid' => $isValid,
+                'is_upcoming' => $match->is_upcoming,
+                'is_live' => $match->is_live,
+                'can_predict' => $canPredict,
+            ],
+            'validation' => [
+                'status' => $status,
+                'match_time' => $match->match_date?->toIso8601String(),
+                'is_future' => $match->is_upcoming,
+            ],
+        ]);
+    }
+
+    protected function formatOdds(array $oddsData, Match $match): array
     {
         $bookmakers = $oddsData['bookmakers'] ?? [];
         $matchWinnerOdds = [];
@@ -71,6 +173,18 @@ class OddsController extends Controller
                 'date' => $oddsData['fixture']['date'],
                 'league' => $oddsData['league']['name'],
             ],
+            'match' => [
+                'id' => $match->id,
+                'status' => $match->status,
+                'is_valid' => $match->is_valid,
+                'is_upcoming' => $match->is_upcoming,
+                'is_live' => $match->is_live,
+                'match_date' => $match->match_date?->toIso8601String(),
+            ],
+            'teams' => [
+                'home' => $match->homeTeam?->name,
+                'away' => $match->awayTeam?->name,
+            ],
             'averages' => [
                 'home' => round($avgHome, 2),
                 'draw' => round($avgDraw, 2),
@@ -87,7 +201,7 @@ class OddsController extends Controller
                 'confidence' => $total ? round(max($impliedHome, $impliedDraw, $impliedAway) / $total * 100) : 0,
             ],
             'sportsbook_odds' => $matchWinnerOdds,
-            'last_update' => $oddsData['update'],
+            'last_update' => $oddsData['update'] ?? now()->toIso8601String(),
         ];
     }
 }

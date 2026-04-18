@@ -36,6 +36,7 @@ const defaultSettings = {
     { key: 'logo_url', label: 'Logo URL', type: 'text', placeholder: 'https://...', description: 'URL to your logo' },
     { key: 'favicon_url', label: 'Favicon URL', type: 'text', placeholder: 'https://.../favicon.ico', description: 'URL to favicon' },
     { key: 'dark_mode_enabled', label: 'Dark Mode', type: 'boolean', description: 'Enable dark mode by default' },
+    { key: 'site_logo', label: 'Site Logo', type: 'file', description: 'Upload your site logo (recommended: 300x80px, jpg/png)' },
   ],
   seo: [
     { key: 'default_meta_title', label: 'Default Meta Title', type: 'text', placeholder: 'Field Forecast', description: 'Fallback title for pages' },
@@ -82,6 +83,7 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const { user } = useCurrentUser();
 
   // Password change state
@@ -113,13 +115,38 @@ export default function AdminSettings() {
     setHasChanges(true);
   };
 
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingLogo(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result;
+        if (base64) {
+          localDb.settings.set('site_logo', base64);
+          setSettings(prev => ({ ...prev, site_logo: base64 }));
+          setHasChanges(true);
+          toast.success('Logo uploaded successfully');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      toast.error('Failed to upload logo');
+    }
+    setUploadingLogo(false);
+  };
+
   const handleSave = () => {
     setSaving(true);
     try {
       const newSettings = {};
       for (const category of Object.keys(defaultSettings)) {
         for (const setting of defaultSettings[category]) {
-          newSettings[setting.key] = settings[setting.key] !== undefined ? settings[setting.key] : '';
+          if (setting.type !== 'file') {
+            newSettings[setting.key] = settings[setting.key] !== undefined ? settings[setting.key] : '';
+          }
         }
       }
       localDb.settings.setMultiple(newSettings);
@@ -336,6 +363,12 @@ export default function AdminSettings() {
                       <div className="flex-1">
                         <Label className="text-sidebar-foreground font-medium">{setting.label}</Label>
                         <p className="text-xs text-sidebar-foreground/50 mt-0.5">{setting.description}</p>
+                        {setting.type === 'file' && settings.site_logo && (
+                          <div className="mt-2">
+                            <img src={settings.site_logo} alt="Current Logo" className="h-16 w-auto object-contain" />
+                            <p className="text-xs text-green-500 mt-1">Current logo uploaded</p>
+                          </div>
+                        )}
                       </div>
                       <div className="w-64">
                         {setting.type === 'boolean' ? (
@@ -344,6 +377,17 @@ export default function AdminSettings() {
                               checked={getSettingValue(setting.key, setting.type)}
                               onCheckedChange={(v) => updateSetting(setting.key, v)}
                             />
+                          </div>
+                        ) : setting.type === 'file' ? (
+                          <div>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleLogoUpload}
+                              className="cursor-pointer"
+                              disabled={uploadingLogo}
+                            />
+                            {uploadingLogo && <p className="text-xs text-sidebar-foreground/50 mt-1">Uploading...</p>}
                           </div>
                         ) : setting.type === 'password' ? (
                           <Input

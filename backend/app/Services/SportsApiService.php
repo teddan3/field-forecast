@@ -4,8 +4,7 @@ namespace App\Services;
 
 use App\Models\Team;
 use App\Models\Match;
-use App\Models\TeamStat;
-use App\Models\HeadToHeadRecord;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -17,24 +16,30 @@ class SportsApiService
     private int $cacheLiveScoreTtl;
     private int $cacheTeamStatsTtl;
     private int $cacheH2hTtl;
+    private int $cacheFixturesTtl;
     private array $premiumLeagueIds;
+
+    const TTL_LIVE = 60;
+    const TTL_FIXTURES = 900;
+    const TTL_ODDS = 120;
 
     public function __construct()
     {
         $this->apiKey = config('services.api_football.key');
         $this->baseUrl = config('services.api_football.base_url');
-        $this->cacheLiveScoreTtl = config('cache.livescore_ttl', 60);
+        $this->cacheLiveScoreTtl = config('cache.livescore_ttl', self::TTL_LIVE);
         $this->cacheTeamStatsTtl = config('cache.team_stats_ttl', 86400);
         $this->cacheH2hTtl = config('cache.h2h_ttl', 43200);
+        $this->cacheFixturesTtl = config('cache.fixtures_ttl', self::TTL_FIXTURES);
         $this->premiumLeagueIds = Team::getPremiumLeagueIds();
     }
 
     public function fetchLiveFixtures(): array
     {
-        $cacheKey = 'live_fixtures';
+        $cacheKey = 'live_fixtures_' . now()->format('H:i');
 
         return Cache::remember($cacheKey, $this->cacheLiveScoreTtl, function () {
-            return $this->callApi('/fixtures?live=all&timezone=America/New_York');
+            return $this->callApi('/fixtures?live=all&timezone=UTC');
         });
     }
 
@@ -42,8 +47,25 @@ class SportsApiService
     {
         $cacheKey = "fixtures_{$date}";
 
-        return Cache::remember($cacheKey, $this->cacheLiveScoreTtl, function () use ($date) {
-            return $this->callApi("/fixtures?date={$date}&timezone=America/New_York");
+        return Cache::remember($cacheKey, $this->cacheFixturesTtl, function () use ($date) {
+            return $this->callApi("/fixtures?date={$date}&timezone=UTC");
+        });
+    }
+
+    public function fetchUpcomingFixtures(int $days = 7): array
+    {
+        $cacheKey = "fixtures_upcoming_{$days}days";
+
+        return Cache::remember($cacheKey, $this->cacheFixturesTtl, function () use ($days) {
+            $fixtures = [];
+            
+            for ($i = 0; $i < $days; $i++) {
+                $date = now()->addDays($i)->format('Y-m-d');
+                $dayFixtures = $this->callApi("/fixtures?date={$date}&timezone=UTC");
+                $fixtures = array_merge($fixtures, $dayFixtures);
+            }
+            
+            return $fixtures;
         });
     }
 
@@ -51,8 +73,8 @@ class SportsApiService
     {
         $cacheKey = "odds_{$fixtureId}";
 
-        return Cache::remember($cacheKey, $this->cacheLiveScoreTtl, function () use ($fixtureId) {
-            return $this->callApi("/odds?fixture={$fixtureId}&timezone=America/New_York");
+        return Cache::remember($cacheKey, self::TTL_ODDS, function () use ($fixtureId) {
+            return $this->callApi("/odds?fixture={$fixtureId}&timezone=UTC");
         });
     }
 
@@ -61,13 +83,13 @@ class SportsApiService
         $cacheKey = "h2h_{$team1Id}_{$team2Id}";
 
         return Cache::remember($cacheKey, $this->cacheH2hTtl, function () use ($team1Id, $team2Id) {
-            return $this->callApi("/fixtures?h2h={$team1Id}-{$team2Id}&timezone=America/New_York");
+            return $this->callApi("/fixtures?h2h={$team1Id}-{$team2Id}&timezone=UTC");
         });
     }
 
     public function syncTeamsFromApi(): int
     {
-        $fixtures = $this->fetchFixturesByDate(now()->toDateString());
+        $fixtures = $this->fetchFixturesByDate(now()->format('Y-m-d'));
         $synced = 0;
 
         foreach ($fixtures as $fixture) {
@@ -75,45 +97,89 @@ class SportsApiService
             $teams = $fixture['teams'] ?? [];
 
             foreach ([$teams['home'] ?? [], $teams['away'] ?? [] as $teamData) {
-                $synced += Team::updateOrCreate(
-                    ['api_id' => $teamData['id']],
-                    [
-                        'name' => $teamData['name'],
-                        'logo' => $teamData['logo'],
-                        'league_id' => $league['id'] ?? null,
-                        'league_name' => $league['name'] ?? null,
-                        'is_premium' => in_array($league['id'] ?? null, $this->premiumLeagueIds),
-                    ]
-                ) ? 1 : 0;
+                if ($teamData) {
+                    Team::updateOrCreate(
+                        ['api_id' => $teamData['id']],
+                        [
+                            'name' => $teamData['name'],
+                            'logo' => $teamData['logo'] ?? null,
+                            'league_id' => $league['id'] ?? null,
+                            'league_name' => $league['name'] ?? null,
+                            'is_premium' => in_array($league['id'] ?? null, $this->premiumLeagueIds),
+                        ]
+                    );
+                    $synced++;
+                }
             }
         }
+
+        Log::info("Team sync completed", ['count' => $synced]);
 
         return $synced;
     }
 
     public function syncMatchesFromApi(): int
     {
-        $fixtures = $this->fetchFixturesByDate(now()->toDateString());
+        $synced = 0;
+        $today = now()->format('Y-m-d');
+        
+        for ($i = 0; $i < 3; $i++) {
+            $date = now()->addDays($i)->format('Y-m-d');
+            $fixtures = $this->fetchFixturesByDate($date);
+            
+            $synced += $this->processFixtures($fixtures);
+        }
+
+        Log::info("Match sync completed", ['synced' => $synced, 'date' => $today]);
+
+        return $synced;
+    }
+
+    private function processFixtures(array $fixtures): int
+    {
         $synced = 0;
 
         foreach ($fixtures as $fixture) {
+            $apiId = $fixture['fixture']['id'] ?? null;
+            
+            if (!$apiId) {
+                continue;
+            }
+
+            $result = $this->syncSingleFixture($fixture);
+            $synced += $result;
+        }
+
+        return $synced;
+    }
+
+    private function syncSingleFixture(array $fixture): int
+    {
+        try {
             $apiId = $fixture['fixture']['id'];
             $league = $fixture['league'] ?? [];
             $teams = $fixture['teams'] ?? [];
             $goals = $fixture['goals'] ?? [];
             $score = $fixture['score'] ?? [];
 
+            $status = $fixture['fixture']['status']['short'] ?? 'NS';
+            $statusLong = $fixture['fixture']['status']['long'] ?? null;
+            $isLive = in_array($status, ['1H', '2H', 'HT', 'ET', 'BT', 'P']);
+
+            $matchTime = $fixture['fixture']['date'] ?? null;
+            $parsedTime = $matchTime ? Carbon::parse($matchTime)->utc() : now()->utc();
+            
+            $isValid = !$this->isInvalidStatus($status) && 
+                      ($parsedTime->isFuture() || $parsedTime->diffInMinutes(now()->utc()) <= 30);
+
             $homeTeam = Team::where('api_id', $teams['home']['id'] ?? null)->first();
             $awayTeam = Team::where('api_id', $teams['away']['id'] ?? null)->first();
 
             if (!$homeTeam || !$awayTeam) {
-                continue;
+                return 0;
             }
 
-            $status = $fixture['fixture']['status']['short'] ?? 'NS';
-            $isLive = in_array($status, ['1H', '2H', 'HT', 'ET', 'BT', 'P']);
-
-            $synced += Match::updateOrCreate(
+            Match::updateOrCreate(
                 ['api_id' => $apiId],
                 [
                     'home_team_id' => $homeTeam->id,
@@ -122,9 +188,9 @@ class SportsApiService
                     'competition_id' => $league['id'] ?? null,
                     'round' => $league['round'] ?? null,
                     'season' => $league['season'] ?? null,
-                    'match_date' => $fixture['fixture']['date'] ?? now(),
+                    'match_date' => $parsedTime,
                     'status' => $status,
-                    'status_long' => $fixture['fixture']['status']['long'] ?? null,
+                    'status_long' => $statusLong,
                     'elapsed' => $fixture['fixture']['status']['elapsed'] ?? null,
                     'home_score' => $goals['home'] ?? null,
                     'away_score' => $goals['away'] ?? null,
@@ -135,14 +201,21 @@ class SportsApiService
                     'referee' => $fixture['fixture']['referee'] ?? null,
                     'is_live' => $isLive,
                     'is_premium' => in_array($league['id'] ?? null, $this->premiumLeagueIds),
+                    'is_valid' => $isValid,
                 ]
-            ) ? 1 : 0;
-        }
+            );
 
-        return $synced;
+            return 1;
+        } catch (\Exception $e) {
+            Log::error("Failed to sync fixture", [
+                'api_id' => $fixture['fixture']['id'] ?? 'unknown',
+                'error' => $e->getMessage(),
+            ]);
+            return 0;
+        }
     }
 
-    public function syncH2HRecord(int $team1Id, int $team2Id): ?HeadToHeadRecord
+    public function syncH2HRecord(int $team1Id, int $team2Id): ?\App\Models\HeadToHeadRecord
     {
         $team1 = Team::findOrFail($team1Id);
         $team2 = Team::findOrFail($team2Id);
@@ -177,7 +250,7 @@ class SportsApiService
 
         $lastMatch = collect($fixtures)->first();
 
-        return HeadToHeadRecord::updateOrCreate(
+        return \App\Models\HeadToHeadRecord::updateOrCreate(
             [
                 'team_home_id' => $team1->id,
                 'team_away_id' => $team2->id,
@@ -192,6 +265,18 @@ class SportsApiService
                 'last_meeting' => $lastMatch['fixture']['date'] ?? null,
             ]
         );
+    }
+
+    public function clearMatchCache(): void
+    {
+        Cache::flush();
+        
+        Log::info("All match-related cache cleared");
+    }
+
+    private function isInvalidStatus(string $status): bool
+    {
+        return in_array($status, ['FT', 'FINISHED', 'CANCELLED', 'ABAN', 'AWD', 'WO', 'POSTPONED', 'SUSPENDED']);
     }
 
     protected function callApi(string $endpoint): array

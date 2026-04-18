@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, Crown, Zap, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import useCurrentUser from '../hooks/useCurrentUser';
 import { Link } from 'react-router-dom';
+import api from '@/api/fieldForecastClient';
 
-const plans = [
+const defaultPlans = [
   {
     id: 'free',
     name: 'Free',
@@ -24,7 +25,7 @@ const plans = [
   {
     id: 'weekly',
     name: 'Weekly',
-    tier: 'premium',
+    tier: 'weekly',
     price: 4,
     duration_days: 7,
     description: 'Perfect for trying premium',
@@ -42,7 +43,7 @@ const plans = [
   {
     id: 'monthly',
     name: 'Monthly',
-    tier: 'premium',
+    tier: 'monthly',
     price: 14,
     duration_days: 30,
     description: 'Best value for regular users',
@@ -59,7 +60,7 @@ const plans = [
   {
     id: 'quarterly',
     name: 'Quarterly',
-    tier: 'vip',
+    tier: 'quarterly',
     price: 42,
     duration_days: 90,
     description: 'Unlock the Full Intelligence Suite',

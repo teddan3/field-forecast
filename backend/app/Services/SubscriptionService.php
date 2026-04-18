@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Log;
 
 class SubscriptionService
 {
-    private const PRICE_PREMIUM = 9.99;
-    private const PRICE_VIP = 19.99;
+    private const PRICE_WEEKLY = 4;
+    private const PRICE_MONTHLY = 14;
+    private const PRICE_QUARTERLY = 42;
 
     public function getSubscriptionPlans(): array
     {
@@ -31,12 +32,12 @@ class SubscriptionService
                     'advanced_stats' => false,
                 ],
             ],
-            'premium' => [
-                'id' => 'premium',
-                'name' => 'Premium',
-                'price' => self::PRICE_PREMIUM,
-                'interval' => 'month',
-                'stripe_price_id' => config('services.stripe.premium_price_id'),
+            'weekly' => [
+                'id' => 'weekly',
+                'name' => 'Weekly',
+                'price' => self::PRICE_WEEKLY,
+                'interval' => 'week',
+                'stripe_price_id' => config('services.stripe.weekly_price_id'),
                 'features' => [
                     'Everything in Free',
                     'All premium leagues',
@@ -46,8 +47,6 @@ class SubscriptionService
                     'Real-time odds comparison',
                     'H2H data',
                     'Advanced stats',
-                    'No ads',
-                    'Priority support',
                 ],
                 'limits' => [
                     'matches_per_day' => -1,
@@ -56,20 +55,38 @@ class SubscriptionService
                     'advanced_stats' => true,
                 ],
             ],
-            'vip' => [
-                'id' => 'vip',
-                'name' => 'VIP',
-                'price' => self::PRICE_VIP,
+            'monthly' => [
+                'id' => 'monthly',
+                'name' => 'Monthly',
+                'price' => self::PRICE_MONTHLY,
                 'interval' => 'month',
-                'stripe_price_id' => config('services.stripe.vip_price_id'),
+                'stripe_price_id' => config('services.stripe.monthly_price_id'),
                 'features' => [
-                    'Everything in Premium',
-                    'Exclusive VIP predictions',
+                    'Everything in Weekly',
                     'Early access to tips',
-                    'VIP community access',
+                    'Premium community access',
                     'Custom alerts',
-                    'Birthday bonus',
-                    'Dedicated support',
+                    'Priority support',
+                ],
+                'limits' => [
+                    'matches_per_day' => -1,
+                    'premium_leagues' => true,
+                    'h2h_data' => true,
+                    'advanced_stats' => true,
+                    'early_access' => true,
+                ],
+            ],
+            'quarterly' => [
+                'id' => 'quarterly',
+                'name' => 'Quarterly',
+                'price' => self::PRICE_QUARTERLY,
+                'interval' => 'quarter',
+                'stripe_price_id' => config('services.stripe.quarterly_price_id'),
+                'features' => [
+                    'Everything in Monthly',
+                    'Best value - Save 25%',
+                    'Exclusive quarterly bonus',
+                    'VIP support',
                 ],
                 'limits' => [
                     'matches_per_day' => -1,
@@ -92,7 +109,7 @@ class SubscriptionService
             'premium_leagues' => ($limits['premium_leagues'] ?? false) || $tier === 'free',
             'h2h_data' => ($limits['h2h_data'] ?? false) || $tier === 'free',
             'advanced_stats' => ($limits['advanced_stats'] ?? false),
-            'early_access' => ($limits['early_access'] ?? false) || $tier !== 'free',
+            'early_access' => ($limits['early_access'] ?? false) || in_array($tier, ['monthly', 'quarterly']),
             default => true,
         };
     }
@@ -114,7 +131,7 @@ class SubscriptionService
 
     public function isSubscriptionActive(User $user): bool
     {
-        if (in_array($user->subscription_tier, ['premium', 'vip'])) {
+        if (in_array($user->subscription_tier, ['weekly', 'monthly', 'quarterly'])) {
             if (!$user->subscription_expires_at) {
                 return true;
             }
@@ -127,7 +144,7 @@ class SubscriptionService
     {
         $currentTier = $this->getUserAccessLevel($user);
         
-        $tierHierarchy = ['free' => 0, 'premium' => 1, 'vip' => 2];
+        $tierHierarchy = ['free' => 0, 'weekly' => 1, 'monthly' => 2, 'quarterly' => 3];
         
         return ($tierHierarchy[$currentTier] ?? 0) >= ($tierHierarchy[$requiredTier] ?? 0);
     }
@@ -231,7 +248,7 @@ class SubscriptionService
 
         $update = [
             'subscription_tier' => $tier,
-            'stripe_subscription_id' => $data['id'] ?? null,
+            'stripe_subscription_id' => $subscription['id'] ?? null,
         ];
 
         if ($expiresAt) {
@@ -258,15 +275,20 @@ class SubscriptionService
             return 'free';
         }
 
-        $premiumPriceId = config('services.stripe.premium_price_id');
-        $vipPriceId = config('services.stripe.vip_price_id');
+        $quarterlyPriceId = config('services.stripe.quarterly_price_id');
+        $monthlyPriceId = config('services.stripe.monthly_price_id');
+        $weeklyPriceId = config('services.stripe.weekly_price_id');
 
-        if ($priceId === $vipPriceId) {
-            return 'vip';
+        if ($priceId === $quarterlyPriceId) {
+            return 'quarterly';
         }
 
-        if ($priceId === $premiumPriceId) {
-            return 'premium';
+        if ($priceId === $monthlyPriceId) {
+            return 'monthly';
+        }
+
+        if ($priceId === $weeklyPriceId) {
+            return 'weekly';
         }
 
         return 'free';
@@ -274,7 +296,7 @@ class SubscriptionService
 
     public function checkAndUpdateExpiredSubscriptions(): int
     {
-        $expired = User::whereIn('subscription_tier', ['premium', 'vip'])
+        $expired = User::whereIn('subscription_tier', ['weekly', 'monthly', 'quarterly'])
             ->where('subscription_expires_at', '<', now())
             ->where('auto_renew', false)
             ->get();
