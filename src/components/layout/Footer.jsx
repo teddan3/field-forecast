@@ -21,11 +21,16 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4">
-              <img src="/logo.png" alt="Field Forecast Logo" className="h-14 w-auto max-w-[200px] object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+              <img 
+                src="/logo.png" 
+                alt="Field Forecast Logo" 
+                className="h-12 w-auto max-w-[160px] object-contain" 
+                onError={(e) => { e.target.style.display = 'none'; }} 
+              />
               <span className="font-heading text-lg font-bold">Field Forecast</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Empowering sports fans with accurate data and insightful predictions. Stay ahead of the game.
+              Real-time sports data, live scores, and expert predictions from 50+ leagues worldwide.
             </p>
           </div>
           <div>
