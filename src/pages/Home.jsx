@@ -95,8 +95,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-foreground text-background">
+      {/* Hero Section: fixed to half viewport height and vertically centered */}
+      <section className="relative overflow-hidden bg-foreground text-background h-[50vh]">
         {heroSection.image && (
           <div className="absolute inset-0 opacity-20">
             <img src={heroSection.image} alt="" className="w-full h-full object-cover" />
@@ -104,7 +104,7 @@ export default function Home() {
         )}
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #2D5BFF 0%, transparent 50%), radial-gradient(circle at 80% 50%, #00C08B 0%, transparent 50%)' }} />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center">
           <div className="max-w-3xl">
             <div className="flex items-center gap-2 mb-6">
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">

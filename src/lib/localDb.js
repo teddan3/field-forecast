@@ -255,6 +255,20 @@ export const localDb = {
         { id: 'page_contact', title: 'Contact', slug: 'contact', route: '/contact', page_type: 'contact', status: 'active' },
         { id: 'page_about', title: 'About Us', slug: 'about', route: '/page/about', page_type: 'default', status: 'active', meta_title: 'About Field Forecast', meta_description: 'Empowering sports fans with accurate data and insightful predictions', content: '<h2>Who We Are</h2><p>Field Forecast is your trusted source for sports data and predictions. We empower sports fans, analysts, and professionals with accurate, real-time sports information.</p><h3>Our Mission</h3><p>At Field Forecast, our mission is to empower sports fans, analysts, and professionals with accurate, real-time sports data and insightful predictions. We deliver comprehensive coverage across multiple sports to help you make smarter decisions and stay connected to the game.</p><h3>What We Offer</h3><p>We provide instant scores, detailed match statistics, historical records, team and player information, and data-driven predictions for sports including football, baseball, basketball, handball, hockey, rugby, and volleyball. Our platform combines trusted data sources with advanced analytics to bring you meaningful insights in a user-friendly format.</p><h3>Sports News</h3><p>Beyond scores and stats, Field Forecast keeps you informed with the latest sports news, updates, and expert analyses. Our dedicated news section covers breaking stories, player transfers, match previews, and in-depth features to ensure you never miss a moment in the world of sports.</p><h3>Our Vision</h3><p>We aspire to be a leading global hub for sports data by continuously enhancing our platform, expanding our sports coverage, and introducing innovative features that meet the evolving needs of the sports community worldwide.</p><h3>Our Commitment</h3><p>Transparency, reliability, and user trust are at the core of everything we do. We are dedicated to maintaining a stable and secure platform that supports informed sports fandom and professional analysis alike.</p><h3>Join Our Community</h3><p>Thank you for choosing Field Forecast as your trusted source for sports information. Together, we stay ahead of the game.</p>' },
       ]);
+
+      // Ensure legal pages exist for footer links (added separately to avoid editing large embedded content)
+      const existing = getStorage('pages', []);
+      const toAdd = [];
+      if (!existing.find(p => p.slug === 'terms')) {
+        toAdd.push({ id: 'page_terms', title: 'Terms and Conditions', slug: 'terms', route: '/page/terms', page_type: 'default', status: 'active', meta_title: 'Terms and Conditions', meta_description: 'Terms and conditions for using Field Forecast', content: '<h2>Terms and Conditions</h2><p>These are the terms and conditions for using Field Forecast. This is a placeholder page. Please replace with your official terms.</p>' });
+      }
+      if (!existing.find(p => p.slug === 'privacy')) {
+        toAdd.push({ id: 'page_privacy', title: 'Privacy Policy', slug: 'privacy', route: '/page/privacy', page_type: 'default', status: 'active', meta_title: 'Privacy Policy', meta_description: 'Privacy policy for Field Forecast', content: '<h2>Privacy Policy</h2><p>This is the privacy policy placeholder. Please replace with your official privacy policy content.</p>' });
+      }
+      if (!existing.find(p => p.slug === 'copyright')) {
+        toAdd.push({ id: 'page_copyright', title: 'Copyright', slug: 'copyright', route: '/page/copyright', page_type: 'default', status: 'active', meta_title: 'Copyright', meta_description: 'Copyright information for Field Forecast', content: '<h2>Copyright</h2><p>All content on Field Forecast is protected by copyright. This is a placeholder copyright page.</p>' });
+      }
+      if (toAdd.length) setStorage('pages', existing.concat(toAdd));
       
       setStorage('sections', [
         // Home page sections
