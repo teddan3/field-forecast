@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Crown, Calendar, MapPin, Clock, Radio, TrendingUp, BarChart3, Users, Shield, Trophy, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { apiFootball } from '@/lib/apiFootball';
+import { apiFootball, API_FOOTBALL_KEY } from '@/lib/apiFootball';
 import useCurrentUser from '@/hooks/useCurrentUser';
 
 export default function MatchDetail() {
@@ -24,7 +24,7 @@ export default function MatchDetail() {
     setLoading(true);
     try {
       const response = await fetch(`https://v3.football.api-sports.io/fixtures?id=${id}`, {
-        headers: { 'x-apisports-key': '99d514e5aa67d22d1d8cb7f97a5a1fe6' }
+        headers: { 'x-apisports-key': API_FOOTBALL_KEY }
       });
       const data = await response.json();
       

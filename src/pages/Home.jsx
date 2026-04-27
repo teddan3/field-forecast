@@ -3,12 +3,11 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Crown, TrendingUp, Shield, Users, Star, Zap, Trophy, BookOpen, Calendar, Radio, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import localDb from '@/lib/localDb';
-import apiFootball from '@/lib/apiFootball';
+import apiFootball, { API_FOOTBALL_KEY } from '@/lib/apiFootball';
 
 const iconMap = { TrendingUp, Shield, Crown, Zap, Users, Star };
 
-const API_FOOTBALL_KEY = '99d514e5aa67d22d1d8cb7f97a5a1fe6';
-const API_BASE = 'https://v3.football.api-sports.io';
+  const API_BASE = 'https://v3.football.api-sports.io';
 
 export default function Home() {
   const [sections, setSections] = useState({});

@@ -1,4 +1,6 @@
-const API_FOOTBALL_KEY = '99d514e5aa67d22d1d8cb7f97a5a1fe6';
+// NOTE: This key is currently hardcoded for demo purposes. Prefer using environment variables
+// (e.g. process.env.REACT_APP_API_FOOTBALL_KEY) for production and CI.
+export const API_FOOTBALL_KEY = 'd9ea526938474b6a9189d9fc1d6e17a8';
 const BASE_URL = 'https://v3.football.api-sports.io';
 
 export const PREMIUM_LEAGUES = [
