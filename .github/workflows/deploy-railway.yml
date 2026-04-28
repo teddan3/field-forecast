@@ -16,9 +16,14 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Railway CLI
+      - name: Install dependencies (jq) and Railway CLI
         run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y jq
           curl -sL https://raw.githubusercontent.com/railwayapp/cli/master/install.sh | sh
+          export PATH="$HOME/.railway/bin:$PATH"
+          railway --version || true
 
       - name: Login to Railway
         env:
