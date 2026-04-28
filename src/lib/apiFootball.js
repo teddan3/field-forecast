@@ -1,7 +1,7 @@
-// NOTE: This key is currently hardcoded for demo purposes. Prefer using environment variables
-// (e.g. process.env.REACT_APP_API_FOOTBALL_KEY) for production and CI.
-export const API_FOOTBALL_KEY = 'd9ea526938474b6a9189d9fc1d6e17a8';
-const BASE_URL = 'https://v3.football.api-sports.io';
+// Use Vite environment variable for the API key so secrets are not committed.
+// Set VITE_API_FOOTBALL_KEY in your deployment environment (Vercel / GitHub Actions).
+export const API_FOOTBALL_KEY = import.meta.env.VITE_API_FOOTBALL_KEY || '';
+const BASE_URL = import.meta.env.VITE_API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io';
 
 export const PREMIUM_LEAGUES = [
   { id: 39, name: 'Premier League', country: 'England', logo: null },
