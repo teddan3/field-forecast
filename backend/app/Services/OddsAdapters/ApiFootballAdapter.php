@@ -35,7 +35,8 @@ class ApiFootballAdapter implements AdapterInterface
                         $values = $bet['values'];
                         $selections = [];
                         foreach ($values as $v) {
-                            $selections[] = ['selection' => strtolower($v['value']), 'odd' => (float)$v['odd']];
+                            $sel = $this->normalizeSelection($v['value']);
+                            $selections[] = ['selection' => $sel, 'odd' => (float)$v['odd']];
                         }
 
                         $normalized[] = [
@@ -58,7 +59,33 @@ class ApiFootballAdapter implements AdapterInterface
     {
         // basic mapping for match winner
         if ($id === 1 || stripos($name, 'match winner') !== false) return '1X2';
+        // over/under markets e.g., "Over/Under 2.5"
+        if (stripos($name, 'over/under') !== false || stripos($name, 'totals') !== false) {
+            // extract line
+            if (preg_match('/([0-9]+\.?[0-9]*)/', $name, $m)) {
+                return 'OU_' . $m[1];
+            }
+            return 'OU';
+        }
+        // asian handicap
+        if (stripos($name, 'handicap') !== false || stripos($name, 'asian') !== false) {
+            return 'AH';
+        }
         // fallback to normalized name
         return strtoupper(str_replace(' ', '_', $name));
+    }
+
+    protected function normalizeSelection($value)
+    {
+        $v = trim(strtolower($value));
+        // normalize common variants
+        if (in_array($v, ['home', 'home win', 'team 1', '1'])) return 'home';
+        if (in_array($v, ['away', 'away win', 'team 2', '2'])) return 'away';
+        if (in_array($v, ['draw', 'tie', 'x'])) return 'draw';
+        // over/under selections like 'Over' or 'Under'
+        if (stripos($v, 'over') !== false) return 'over';
+        if (stripos($v, 'under') !== false) return 'under';
+        // default: return cleaned string
+        return preg_replace('/[^a-z0-9_\.-]/', '_', $v);
     }
 }
