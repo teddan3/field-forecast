@@ -26,20 +26,15 @@ jobs:
           echo "$HOME/.railway/bin" >> $GITHUB_PATH
           $HOME/.railway/bin/railway --version || true
 
-      - name: Login to Railway
+      - name: Configure Railway token
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           set -euo pipefail
-          # Attempt to login with token and print debugging info on failure
-          railway login --token "$RAILWAY_TOKEN" || {
-            echo "Railway login failed. Printing diagnostic info..."
-            echo "railway --version:"; railway --version || true
-            echo "Attempt railway whoami:"; railway whoami || true
-            echo "Attempt project list:"; railway project:list --json || true
-            exit 2
-          }
-          echo "Railway login succeeded. Current user:"; railway whoami || true
+          # Export token for subsequent railway commands
+          echo "RAILWAY_TOKEN=$RAILWAY_TOKEN" >> $GITHUB_ENV
+          echo "railway --version:"; railway --version || true
+          echo "railway whoami:"; railway whoami || true || true
 
       - name: Ensure Railway project exists
         id: ensure_project
