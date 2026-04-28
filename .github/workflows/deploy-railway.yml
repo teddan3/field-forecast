@@ -22,8 +22,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
           curl -sL https://raw.githubusercontent.com/railwayapp/cli/master/install.sh | sh
-          export PATH="$HOME/.railway/bin:$PATH"
-          railway --version || true
+          # Add railway binary directory to PATH for subsequent steps
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+          $HOME/.railway/bin/railway --version || true
 
       - name: Login to Railway
         env:
@@ -69,7 +70,8 @@ jobs:
           fi
           echo "postgres_id=$PG_ID" >> $GITHUB_OUTPUT
 
-      - name: Create web service (Docker) and deploy
+      - id: create_web_service
+        name: Create web service (Docker) and deploy
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
@@ -108,11 +110,6 @@ jobs:
           DEPLOY_URL=$(echo "$DEPLOY_RES" | jq -r '.url')
           echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
 
-      - name: Get service URL
-        id: get_url
-        run: |
-          echo "service_url=${{ steps.create_web_service.outputs.deploy_url }}" || true
-
       - name: Run artisan commands via Railway run
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -129,20 +126,21 @@ jobs:
           railway run --project $PROJECT_ID -- 'php artisan config:cache'
 
       - name: Set Vercel environment variables and trigger deploy
-        if: ${{ secrets.VERCEL_TOKEN != '' }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ steps.ensure_project.outputs.project_id }}
           DEPLOY_URL: ${{ steps.create_web_service.outputs.deploy_url }}
         run: |
           set -euo pipefail
+          if [ -z "${VERCEL_TOKEN:-}" ] || [ "$VERCEL_TOKEN" = "null" ]; then
+            echo "VERCEL_TOKEN not set; skipping Vercel deploy"
+            exit 0
+          fi
           # Install Vercel CLI
           npm install -g vercel
-          # Create or get project on Vercel (assumes repo is connected manually)
-          # Set required envs
+          # Set required envs (ignore errors if already set)
           vercel env add VITE_API_URL production "$DEPLOY_URL" --token "$VERCEL_TOKEN" || true
           vercel env add VITE_API_FOOTBALL_BASE_URL production "https://v3.football.api-sports.io" --token "$VERCEL_TOKEN" || true
-          # Optionally set front-end keys if desired
           # Trigger a deployment
           vercel --prod --token "$VERCEL_TOKEN"
 
