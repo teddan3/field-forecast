@@ -42,6 +42,10 @@ Route::post('/odds/validate', [OddsController::class, 'validateMatch']);
 Route::get('/fixtures/{id}/odds', [\App\Http\Controllers\Api\OddsController::class, 'showFixtureOdds']);
 Route::post('/arbitrage/scan', [\App\Http\Controllers\Api\OddsController::class, 'scanArbitrage']);
 Route::get('/fixtures/{id}/odds/history', [\App\Http\Controllers\Api\OddsHistoryController::class, 'history']);
+Route::get('/predict/{id}', [\App\Http\Controllers\Api\PredictionController::class, 'predict']);
+Route::post('/arbitrage/scan-v2', [\App\Http\Controllers\Api\ArbitrageController::class, 'scan']);
+Route::post('/tips', [\App\Http\Controllers\Api\TipsController::class, 'create'])->middleware('auth:sanctum');
+Route::get('/tips/user/{id}', [\App\Http\Controllers\Api\TipsController::class, 'listForUser']);
 
 // Subscription Plans (public)
 Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);

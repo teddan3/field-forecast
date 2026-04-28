@@ -76,16 +76,25 @@ class ProcessFixtureOdds implements ShouldQueue
                 $best[$r->selection] = (float)$r->best_odd;
                 $sumInv += 1.0 / (float)$r->best_odd;
 
-                // write to odds_history
-                DB::table('odds_history')->insertGetId([
-                    'fixture_id' => $this->fixtureId,
-                    'market' => $market,
-                    'selection' => $r->selection,
-                    'odd' => (float)$r->best_odd,
-                    'recorded_at' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                // write to odds_history (avoid duplicate identical consecutive entries by checking last)
+                $last = DB::table('odds_history')
+                    ->where('fixture_id', $this->fixtureId)
+                    ->where('market', $market)
+                    ->where('selection', $r->selection)
+                    ->orderBy('recorded_at', 'desc')
+                    ->first();
+
+                if (!$last || (float)$last->odd !== (float)$r->best_odd) {
+                    DB::table('odds_history')->insertGetId([
+                        'fixture_id' => $this->fixtureId,
+                        'market' => $market,
+                        'selection' => $r->selection,
+                        'odd' => (float)$r->best_odd,
+                        'recorded_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
 
             $vig = max(0, $sumInv - 1.0);
