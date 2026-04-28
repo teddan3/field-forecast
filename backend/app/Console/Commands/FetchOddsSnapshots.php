@@ -38,33 +38,8 @@ class FetchOddsSnapshots extends Command
             $fixtures = $fixturesRes->json('response', []);
             foreach (array_slice($fixtures, 0, 25) as $f) {
                 $fixtureId = $f['fixture']['id'];
-                // fetch odds for fixture
-                $oddsRes = Http::withHeaders(['x-apisports-key' => $key])->get("{$base}/odds?fixture={$fixtureId}");
-                if (!$oddsRes->ok()) continue;
-                $odds = $oddsRes->json('response', []);
-
-                foreach ($odds as $od) {
-                    // store simple 1X2 market if present
-                    foreach ($od['bookmakers'] as $bm) {
-                        foreach ($bm['bets'] as $bet) {
-                            if ($bet['id'] === 1) { // match winner
-                                foreach ($bet['values'] as $val) {
-                                    DB::table('odds_snapshots')->insertGetId([
-                                        'fixture_id' => $fixtureId,
-                                        'bookmaker_id' => $bookmaker->id,
-                                        'market' => '1X2',
-                                        'selection' => strtolower($val['value']),
-                                        'odd' => $val['odd'],
-                                        'raw' => json_encode($val),
-                                        'received_at' => now(),
-                                        'created_at' => now(),
-                                        'updated_at' => now(),
-                                    ]);
-                                }
-                            }
-                        }
-                    }
-                }
+                // dispatch job to process fixture odds
+                \App\Jobs\ProcessFixtureOdds::dispatch($fixtureId);
             }
         } catch (\Exception $e) {
             Log::error('FetchOddsSnapshots error', ['err' => $e->getMessage()]);
