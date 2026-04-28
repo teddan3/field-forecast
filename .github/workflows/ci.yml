@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install frontend deps
+        run: npm ci
+      - name: Build frontend
+        run: npm run build
+
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v4
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, bcmath, pcntl, zip, sqlite
+      - name: Install composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+        working-directory: backend
+      - name: Run backend unit tests
+        run: vendor/bin/phpunit --colors=never --testdox
+        working-directory: backend
