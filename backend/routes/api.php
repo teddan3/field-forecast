@@ -44,6 +44,8 @@ Route::post('/arbitrage/scan', [\App\Http\Controllers\Api\OddsController::class,
 Route::get('/fixtures/{id}/odds/history', [\App\Http\Controllers\Api\OddsHistoryController::class, 'history']);
 Route::get('/predict/{id}', [\App\Http\Controllers\Api\PredictionController::class, 'predict']);
 Route::post('/arbitrage/scan-v2', [\App\Http\Controllers\Api\ArbitrageController::class, 'scan']);
+Route::post('/value/compute', [\App\Http\Controllers\Api\ValueController::class, 'compute']);
+Route::post('/stripe/create-checkout', [\App\Http\Controllers\Api\StripeController::class, 'createCheckout'])->middleware('auth:sanctum');
 Route::post('/tips', [\App\Http\Controllers\Api\TipsController::class, 'create'])->middleware('auth:sanctum');
 Route::get('/tips/user/{id}', [\App\Http\Controllers\Api\TipsController::class, 'listForUser']);
 
