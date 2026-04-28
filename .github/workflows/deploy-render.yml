@@ -28,12 +28,37 @@ jobs:
 
           SERVICE_ID=$(echo "$SERVICES_JSON" | jq -r --arg NAME "$SERVICE_NAME" '.[] | select(.name==$NAME) | .id')
           if [ -z "$SERVICE_ID" ] || [ "$SERVICE_ID" = "null" ]; then
-            echo "Service '$SERVICE_NAME' not found. Dumping services list for debug:" >&2
-            echo "$SERVICES_JSON" >&2
-            exit 1
+            echo "Service '$SERVICE_NAME' not found. Creating it using values from render.yaml"
+            # Minimal create body derived from render.yaml in the repo
+            read -r -d '' CREATE_BODY <<'JSON' || true
+{
+  "service": {
+    "name": "field-forecast-backend",
+    "repo": "https://github.com/teddan3/field-forecast",
+    "branch": "main",
+    "env": "docker",
+    "plan": "starter",
+    "autoDeploy": true,
+    "buildCommand": "docker build -t field-forecast-backend backend/.",
+    "startCommand": "php -S 0.0.0.0:8000 -t backend/public"
+  }
+}
+JSON
+
+            echo "Creating service..."
+            CREATE_RES=$(curl -s -X POST -H "Authorization: $AUTH" -H "Content-Type: application/json" -d "$CREATE_BODY" "https://api.render.com/v1/services")
+            echo "Create response: $CREATE_RES"
+            SERVICE_ID=$(echo "$CREATE_RES" | jq -r '.id')
+            if [ -z "$SERVICE_ID" ] || [ "$SERVICE_ID" = "null" ]; then
+              echo "Failed to create service. Response:" >&2
+              echo "$CREATE_RES" >&2
+              exit 1
+            fi
+            echo "Created service id: $SERVICE_ID"
+          else
+            echo "Found service id: $SERVICE_ID"
           fi
 
-          echo "Found service id: $SERVICE_ID"
           echo "Triggering a manual deploy for service $SERVICE_NAME ($SERVICE_ID)"
           curl -s -X POST -H "Authorization: $AUTH" -H "Content-Type: application/json" -d '{"clearCache":true}' "https://api.render.com/v1/services/$SERVICE_ID/deploys" | tee deploy_response.json
           echo "Deploy response:" && cat deploy_response.json
