@@ -41,6 +41,7 @@ Route::post('/odds/validate', [OddsController::class, 'validateMatch']);
 // New endpoints for snapshots/aggregates
 Route::get('/fixtures/{id}/odds', [\App\Http\Controllers\Api\OddsController::class, 'showFixtureOdds']);
 Route::post('/arbitrage/scan', [\App\Http\Controllers\Api\OddsController::class, 'scanArbitrage']);
+Route::get('/fixtures/{id}/odds/history', [\App\Http\Controllers\Api\OddsHistoryController::class, 'history']);
 
 // Subscription Plans (public)
 Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
