@@ -38,6 +38,10 @@ Route::get('/odds/{fixtureId}', [OddsController::class, 'show']);
 Route::get('/odds/upcoming', [OddsController::class, 'upcoming']);
 Route::post('/odds/validate', [OddsController::class, 'validateMatch']);
 
+// New endpoints for snapshots/aggregates
+Route::get('/fixtures/{id}/odds', [\App\Http\Controllers\Api\OddsController::class, 'showFixtureOdds']);
+Route::post('/arbitrage/scan', [\App\Http\Controllers\Api\OddsController::class, 'scanArbitrage']);
+
 // Subscription Plans (public)
 Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
 Route::get('/matches/valid', [OddsController::class, 'upcoming']);
