@@ -9,9 +9,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Render
-        uses: jakejarvis/render-deploy@v1
-        with:
-          service: field-forecast-backend
-          api_key: ${{ secrets.RENDER_API_KEY }}
-          trigger: manual
+      - name: Deploy to Render (via API)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+          # Install jq if not available
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "jq missing, installing..."
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+
+          SERVICE_NAME=field-forecast-backend
+          AUTH="Bearer $RENDER_API_KEY"
+
+          echo "Listing Render services to find '$SERVICE_NAME'..."
+          SERVICES_JSON=$(curl -s -H "Authorization: $AUTH" "https://api.render.com/v1/services")
+
+          SERVICE_ID=$(echo "$SERVICES_JSON" | jq -r --arg NAME "$SERVICE_NAME" '.[] | select(.name==$NAME) | .id')
+          if [ -z "$SERVICE_ID" ] || [ "$SERVICE_ID" = "null" ]; then
+            echo "Service '$SERVICE_NAME' not found. Dumping services list for debug:" >&2
+            echo "$SERVICES_JSON" >&2
+            exit 1
+          fi
+
+          echo "Found service id: $SERVICE_ID"
+          echo "Triggering a manual deploy for service $SERVICE_NAME ($SERVICE_ID)"
+          curl -s -X POST -H "Authorization: $AUTH" -H "Content-Type: application/json" -d '{"clearCache":true}' "https://api.render.com/v1/services/$SERVICE_ID/deploys" | tee deploy_response.json
+          echo "Deploy response:" && cat deploy_response.json
