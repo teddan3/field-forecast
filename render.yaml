@@ -5,8 +5,9 @@ services:
     plan: starter
     repo: https://github.com/teddan3/field-forecast
     branch: main
-    buildCommand: "docker build -t field-forecast-backend backend/."
-    startCommand: "php -S 0.0.0.0:8000 -t backend/public"
+    buildCommand: "docker build -f backend/Dockerfile -t field-forecast-backend backend/."
+    # startCommand is not required for Docker environment because the image's CMD will run
+    startCommand: ""
     envVars:
       - key: APP_ENV
         value: production
