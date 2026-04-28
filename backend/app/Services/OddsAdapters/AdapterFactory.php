@@ -15,6 +15,9 @@ class AdapterFactory
         if ($slug === 'api_football' || isset($meta['api_key'])) {
             return new ApiFootballAdapter($meta);
         }
+        if ($slug === 'the_odds_api' || isset($meta['theoddsapi_key'])) {
+            return new TheOddsApiAdapter($meta);
+        }
 
         // default: null (no adapter)
         return null;

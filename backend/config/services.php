@@ -18,4 +18,7 @@ return [
         'secret' => env('PUSHER_APP_SECRET'),
         'cluster' => env('PUSHER_CLUSTER', 'mt1'),
     ],
+    'broadcast' => [
+        'driver' => env('BROADCAST_DRIVER', 'pusher'),
+    ],
 ];

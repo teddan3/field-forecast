@@ -89,16 +89,24 @@ class ProcessFixtureOdds implements ShouldQueue
             }
 
             $vig = max(0, $sumInv - 1.0);
-            $aggId = DB::table('odds_aggregates')->insertGetId([
+            // upsert aggregate (keep latest per fixture+market)
+            $payload = [
                 'fixture_id' => $this->fixtureId,
                 'market' => $market,
                 'best_offer' => json_encode($best),
                 'implied_probs' => json_encode(array_map(function($o){ return 1/$o; }, $best)),
                 'vig' => $vig,
                 'computed_at' => now(),
-                'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ];
+            $existing = DB::table('odds_aggregates')->where('fixture_id', $this->fixtureId)->where('market', $market)->first();
+            if ($existing) {
+                DB::table('odds_aggregates')->where('id', $existing->id)->update($payload);
+                $aggId = $existing->id;
+            } else {
+                $payload['created_at'] = now();
+                $aggId = DB::table('odds_aggregates')->insertGetId($payload);
+            }
 
             // cache aggregate
             Cache::put("odds:aggregate:fixture:{$this->fixtureId}:{$market}", $best, 60);
