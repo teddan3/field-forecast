@@ -1,0 +1,145 @@
+name: Deploy Backend to Railway and Frontend to Vercel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node (for Vercel CLI later)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Railway CLI
+        run: |
+          curl -sL https://raw.githubusercontent.com/railwayapp/cli/master/install.sh | sh
+
+      - name: Login to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway login --token "$RAILWAY_TOKEN"
+
+      - name: Ensure Railway project exists
+        id: ensure_project
+        run: |
+          set -euo pipefail
+          PROJECT_NAME=field-forecast
+          # If project exists, get id
+          PROJECTS_JSON=$(railway project:list --json || echo "[]")
+          PROJECT_ID=$(echo "$PROJECTS_JSON" | jq -r --arg NAME "$PROJECT_NAME" '.[] | select(.name==$NAME) | .id')
+          if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "null" ]; then
+            echo "Creating Railway project: $PROJECT_NAME"
+            CREATE=$(railway project:create "$PROJECT_NAME" --json)
+            echo "create: $CREATE"
+            PROJECT_ID=$(echo "$CREATE" | jq -r '.id')
+          else
+            echo "Found project id: $PROJECT_ID"
+          fi
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+
+      - name: Create or attach Postgres plugin
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID=${{ steps.ensure_project.outputs.project_id }}
+          echo "Using project id: $PROJECT_ID"
+          # list plugins for project
+          PLUGINS=$(railway plugin:list --project $PROJECT_ID --json || echo "[]")
+          PG_ID=$(echo "$PLUGINS" | jq -r '.[] | select(.type=="postgres") | .id' | head -n1 || true)
+          if [ -z "$PG_ID" ]; then
+            echo "Creating Postgres plugin..."
+            CREATE=$(railway plugin:create postgres --project $PROJECT_ID --json)
+            echo "$CREATE"
+            PG_ID=$(echo "$CREATE" | jq -r '.id')
+          else
+            echo "Found Postgres plugin: $PG_ID"
+          fi
+          echo "postgres_id=$PG_ID" >> $GITHUB_OUTPUT
+
+      - name: Create web service (Docker) and deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID=${{ steps.ensure_project.outputs.project_id }}
+          echo "Creating service in project $PROJECT_ID"
+          # Check existing services
+          SVCS=$(railway service:list --project $PROJECT_ID --json || echo "[]")
+          SVC_ID=$(echo "$SVCS" | jq -r '.[] | select(.serviceType=="https") | .id' | head -n1 || true)
+          if [ -z "$SVC_ID" ]; then
+            echo "Creating a new web service"
+            CREATE_SVC=$(railway service:create --project $PROJECT_ID --name field-forecast-backend --type web --json)
+            echo "$CREATE_SVC"
+            SVC_ID=$(echo "$CREATE_SVC" | jq -r '.id')
+          else
+            echo "Using existing service: $SVC_ID"
+          fi
+
+          # Link the GitHub repo and set deployment to build using backend/Dockerfile
+          echo "Linking repo and setting build..."
+          railway service:set --project $PROJECT_ID --service $SVC_ID --buildCommand "docker build -f backend/Dockerfile -t field-forecast-backend backend/."
+
+          # Set environment variables
+          railway variables:set API_FOOTBALL_KEY="$API_FOOTBALL_KEY" --project $PROJECT_ID --service $SVC_ID
+          railway variables:set ODDS_API_KEY="$ODDS_API_KEY" --project $PROJECT_ID --service $SVC_ID
+          railway variables:set APP_ENV=production --project $PROJECT_ID --service $SVC_ID
+          railway variables:set APP_DEBUG=false --project $PROJECT_ID --service $SVC_ID
+
+          # Deploy the service
+          echo "Triggering deploy..."
+          DEPLOY_RES=$(railway up --project $PROJECT_ID --service $SVC_ID --detach --json)
+          echo "$DEPLOY_RES"
+          echo "$DEPLOY_RES" > deploy_output.json
+          DEPLOY_URL=$(echo "$DEPLOY_RES" | jq -r '.url')
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+
+      - name: Get service URL
+        id: get_url
+        run: |
+          echo "service_url=${{ steps.create_web_service.outputs.deploy_url }}" || true
+
+      - name: Run artisan commands via Railway run
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID=${{ steps.ensure_project.outputs.project_id }}
+          echo "Running artisan commands using railway run"
+          railway run --project $PROJECT_ID -- 'php artisan key:generate --show' > key_out.txt
+          APP_KEY=$(tail -n1 key_out.txt | tr -d '\r')
+          echo "Setting APP_KEY"
+          railway variables:set APP_KEY="$APP_KEY" --project $PROJECT_ID
+          railway run --project $PROJECT_ID -- 'php artisan migrate --force'
+          railway run --project $PROJECT_ID -- 'php artisan storage:link'
+          railway run --project $PROJECT_ID -- 'php artisan config:cache'
+
+      - name: Set Vercel environment variables and trigger deploy
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ steps.ensure_project.outputs.project_id }}
+          DEPLOY_URL: ${{ steps.create_web_service.outputs.deploy_url }}
+        run: |
+          set -euo pipefail
+          # Install Vercel CLI
+          npm install -g vercel
+          # Create or get project on Vercel (assumes repo is connected manually)
+          # Set required envs
+          vercel env add VITE_API_URL production "$DEPLOY_URL" --token "$VERCEL_TOKEN" || true
+          vercel env add VITE_API_FOOTBALL_BASE_URL production "https://v3.football.api-sports.io" --token "$VERCEL_TOKEN" || true
+          # Optionally set front-end keys if desired
+          # Trigger a deployment
+          vercel --prod --token "$VERCEL_TOKEN"
+
+      - name: Complete
+        run: echo "Deploy workflow completed"
